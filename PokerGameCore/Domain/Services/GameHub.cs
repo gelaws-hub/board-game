@@ -8,10 +8,19 @@ namespace PokerGameCalled.Hubs
     {
         private readonly GameService _gameService;
 
+        private readonly Dictionary<string, CancellationTokenSource> _heartbeatTokens = new();
+
         public GameHub(GameService gameService)
         {
             _gameService = gameService;
         }
+
+        public async Task BroadcastGameList()
+        {
+            var games = _gameService.GetAllGames();
+            await Clients.All.SendAsync("AvailableGamesUpdated", games);
+        }
+
 
         public async Task JoinGame(Guid gameId, string username)
         {
@@ -87,6 +96,42 @@ namespace PokerGameCalled.Hubs
             var game = _gameService.GetGame(gameId);
 
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+        }
+
+        public override async Task OnConnectedAsync()
+        {
+            // Create a CancellationTokenSource for this specific connection
+            var cts = new CancellationTokenSource();
+            _heartbeatTokens.TryAdd(Context.ConnectionId, cts);
+
+            // Start a background task to send heartbeat messages
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    while (!cts.Token.IsCancellationRequested)
+                    {
+                        // Send a message only to the currently connected client (Caller)
+                        await Clients.Caller.SendAsync("Heartbeat", $"Server heartbeat: {DateTime.Now:HH:mm:ss}");
+
+                        // Or, if you want ALL clients to see every heartbeat (less common for a direct test)
+                        // await Clients.All.SendAsync("Heartbeat", $"Server heartbeat (to all): {DateTime.Now:HH:mm:ss}");
+
+                        await Task.Delay(3000, cts.Token); // Wait for 3 seconds
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    // This is expected when the client disconnects
+                    Console.WriteLine($"Heartbeat task for {Context.ConnectionId} cancelled.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error in heartbeat task for {Context.ConnectionId}: {ex.Message}");
+                }
+            }, cts.Token); // Pass the token to Task.Run
+
+            await base.OnConnectedAsync(); // Call the base method
         }
     }
 }

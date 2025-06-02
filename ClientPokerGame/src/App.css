@@ -1,0 +1,82 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+input[type="text"],
+button {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  font-size: 1rem;
+  margin-right: 10px;
+}
+
+button {
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+pre {
+  background-color: #e9ecef;
+  padding: 15px;
+  border-radius: 5px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-top: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.chat {
+  border: 1px solid #adb5bd;
+  padding: 15px;
+  margin-top: 20px;
+  height: 300px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chat ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chat li {
+  padding: 8px 0;
+  border-bottom: 1px dashed #e9ecef;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.chat li:last-child {
+  border-bottom: none;
+}
+
+.timestamp {
+  font-size: 0.8em;
+  color: #6c757d;
+  margin-right: 5px;
+}
+
+.event {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.heartbeat {
+  color: #28a745;
+}

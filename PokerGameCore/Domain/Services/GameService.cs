@@ -119,5 +119,10 @@ namespace PokerGameCalled.Application.Services
                 _rules.NextTurn(game);
             }
         }
+
+        public List<Game> GetAllGames()
+        {
+            return _games.Values.ToList();
+        }
     }
 }

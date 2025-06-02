@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minuman Game Client</title>
+</head>
+<body>
+    <h1>Minuman Game (Test UI)</h1>
+
+    <button onclick="createGame()">Create Game</button><br><br>
+    <input type="text" id="gameIdInput" placeholder="Enter Game ID" />
+    <input type="text" id="usernameInput" placeholder="Username" />
+    <button onclick="joinGame()">Join Game</button><br><br>
+    <button onclick="startGame()">Start Game</button><br><br>
+    <button onclick="checkStatus()">Check Game Status</button>
+
+    <pre id="output"></pre>
+
+    <script>
+        const apiBase = 'http://localhost:5037/game';
+        let currentGameId = "";
+
+        async function createGame() {
+            const res = await fetch(`${apiBase}/create`, { method: "POST" });
+            const data = await res.json();
+            currentGameId = data.gameId;
+            document.getElementById("gameIdInput").value = currentGameId;
+            showOutput(data);
+        }
+
+        async function joinGame() {
+            const gameId = document.getElementById("gameIdInput").value;
+            const username = document.getElementById("usernameInput").value;
+            const res = await fetch(`${apiBase}/${gameId}/join?username=${encodeURIComponent(username)}`, {
+                method: "POST"
+            });
+            showOutput(await res.json());
+        }
+
+        async function startGame() {
+            const gameId = document.getElementById("gameIdInput").value;
+            const res = await fetch(`${apiBase}/${gameId}/start`, { method: "POST" });
+            showOutput(await res.json());
+        }
+
+        async function checkStatus() {
+            const gameId = document.getElementById("gameIdInput").value;
+            const res = await fetch(`${apiBase}/status/${gameId}`);
+            showOutput(await res.json());
+        }
+
+        function showOutput(data) {
+            document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

@@ -10,7 +10,10 @@ namespace PokerGameCore.Domain.Models
         public Deck MinumPile { get; set; } = new();
         public GameState State { get; set; } = GameState.WaitingForPlayers;
         public int CurrentPlayerIndex { get; set; } = 0;
-        public Player CurrentPlayer => Players[CurrentPlayerIndex];
         public Card? CurrentBoardCard => BoardHistory.LastOrDefault();
+
+        public Player? CurrentPlayer =>
+        Players.Count > CurrentPlayerIndex ? Players[CurrentPlayerIndex] : null;
+
     }
 }

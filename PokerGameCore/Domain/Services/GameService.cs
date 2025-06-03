@@ -1,9 +1,8 @@
-using PokerGameCalled.Domain.Models;
-using PokerGameCalled.Domain.Services;
-using PokerGameCalled.Domain.Enums;
+using PokerGameCore.Domain.Models;
+using PokerGameCore.Domain.Enums;
 using System.Collections.Concurrent;
 
-namespace PokerGameCalled.Application.Services
+namespace PokerGameCore.Domain.Services
 {
     public class GameService
     {

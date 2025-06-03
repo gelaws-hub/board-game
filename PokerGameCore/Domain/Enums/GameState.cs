@@ -1,4 +1,4 @@
-namespace PokerGameCalled.Domain.Enums
+namespace PokerGameCore.Domain.Enums
 {
     public enum GameState
     {

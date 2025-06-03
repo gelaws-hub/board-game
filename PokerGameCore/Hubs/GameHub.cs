@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
-using PokerGameCalled.Application.Services;
-using PokerGameCalled.Domain.Models;
+using PokerGameCore.Domain.Services;
+using PokerGameCore.Domain.Models;
 
-namespace PokerGameCalled.Hubs
+namespace PokerGameCore.Hubs
 {
     public class GameHub : Hub
     {
@@ -15,12 +15,16 @@ namespace PokerGameCalled.Hubs
             _gameService = gameService;
         }
 
+        public async Task SendMessage(string username, string message)
+        {
+            await Clients.All.SendAsync("ReceieveMessage", username, message);
+        }
+
         public async Task BroadcastGameList()
         {
             var games = _gameService.GetAllGames();
             await Clients.All.SendAsync("AvailableGamesUpdated", games);
         }
-
 
         public async Task JoinGame(Guid gameId, string username)
         {
@@ -100,18 +104,15 @@ namespace PokerGameCalled.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            // Create a CancellationTokenSource for this specific connection
             var cts = new CancellationTokenSource();
             _heartbeatTokens.TryAdd(Context.ConnectionId, cts);
 
-            // Start a background task to send heartbeat messages
             _ = Task.Run(async () =>
             {
                 try
                 {
                     while (!cts.Token.IsCancellationRequested)
                     {
-                        // Send a message only to the currently connected client (Caller)
                         await Clients.Caller.SendAsync("Heartbeat", $"Server heartbeat: {DateTime.Now:HH:mm:ss}");
 
                         // Or, if you want ALL clients to see every heartbeat (less common for a direct test)

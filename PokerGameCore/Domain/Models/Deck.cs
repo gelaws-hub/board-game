@@ -1,6 +1,6 @@
-using PokerGameCalled.Domain.Enums;
+using PokerGameCore.Domain.Enums;
 
-namespace PokerGameCalled.Domain.Models
+namespace PokerGameCore.Domain.Models
 {
     public class Deck
     {

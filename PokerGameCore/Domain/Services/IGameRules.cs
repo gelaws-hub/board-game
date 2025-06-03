@@ -1,6 +1,6 @@
-using PokerGameCalled.Domain.Models;
+using PokerGameCore.Domain.Models;
 
-namespace PokerGameCalled.Domain.Services
+namespace PokerGameCore.Domain.Services
 {
     public interface IGameRules
     {

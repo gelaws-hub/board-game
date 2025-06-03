@@ -1,4 +1,4 @@
-namespace PokerGameCalled.Domain.Models
+namespace PokerGameCore.Domain.Models
 {
     public class User
     {

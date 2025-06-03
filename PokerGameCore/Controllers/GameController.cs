@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using PokerGameCalled.Application.Services;
-using PokerGameCalled.Domain.Models;
+using PokerGameCore.Domain.Services;
+using PokerGameCore.Domain.Models;
 
-namespace PokerGameCalled.Controllers
+namespace PokerGameCore.Controllers
 {
     [ApiController]
     [Route("game")]
@@ -60,7 +60,7 @@ namespace PokerGameCalled.Controllers
                 return BadRequest("Could not start game.");
 
             var game = _gameService.GetGame(id);
-            return Ok(new { message = "Game started", state = game.State });
+            return Ok(new { message = "Game started", state = game?.State });
         }
     }
 }

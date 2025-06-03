@@ -1,6 +1,5 @@
-using PokerGameCalled.Domain.Services;
-using PokerGameCalled.Application.Services;
-using PokerGameCalled.Hubs;
+using PokerGameCore.Domain.Services;
+using PokerGameCore.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 

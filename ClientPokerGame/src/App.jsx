@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import "./App.css";
 
@@ -10,6 +10,8 @@ function App() {
   const [output, setOutput] = useState("");
   const [messages, setMessages] = useState([]);
   const connectionRef = useRef(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [message, setMessage] = useState("")
 
   const addMessage = (eventType, data, isHeartbeat = false) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -28,6 +30,10 @@ function App() {
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
       .build();
+
+    connection.on("ReceieveMessage", (username, message) => (
+      addMessage("ReceieveMessage", username, message)
+    ))
 
     connection.on("Heartbeat", (message) =>
       addMessage("Heartbeat", message, true)
@@ -61,17 +67,15 @@ function App() {
     try {
       await connection.start();
       addMessage("Connected", { connectionId: connection.connectionId });
+      setIsConnected(true);
     } catch (err) {
       addMessage("Connection Error", { error: err.message });
       setTimeout(setupConnection, 5000);
+      setIsConnected(false);
     }
 
     connectionRef.current = connection;
   };
-
-  useEffect(() => {
-    setupConnection();
-  }, []);
 
   const showOutput = (data) => {
     setOutput(JSON.stringify(data, null, 2));
@@ -88,6 +92,13 @@ function App() {
       addMessage("API Error: Create Game", { error: e.message });
     }
   };
+
+  const sendMessage = (event) => {
+    connectionRef.current.invoke("SendMessage", username, message).catch(function (err) {
+      return console.error(err.toString());
+    })
+    event.preventDefault();
+  }
 
   const joinGame = async () => {
     if (!gameId || !username) return alert("Game ID & username required.");
@@ -151,9 +162,19 @@ function App() {
       <br />
       <button onClick={checkStatus}>Check Game Status</button>
 
+      <form onSubmit={sendMessage}>
+        <h3>Chat Section</h3>
+        <input type="text" onChange={(e) => setMessage(e.target.value)} value={message} />
+        <button type="submit">Submit</button>
+      </form>
+
+
       <h3>API Call Output:</h3>
       <pre>{output}</pre>
 
+      <div>
+        <button style={isConnected ? { backgroundColor: 'gray' } : {}} disabled={isConnected} onClick={setupConnection}>{isConnected ? "Connected" : "Connect to SignalR"}</button>
+      </div>
       <h3>SignalR Messages:</h3>
       <div className="chat">
         <ul>

@@ -80,6 +80,39 @@ export const SignalRProvider = ({ children }) => {
             addMessage("AvailableGamesUpdated", games);
         });
 
+        connection.on("ReceieveMessage", (username, message) => {
+            console.log("AvailableGamesUpdated received:", games);
+            addMessage("ReceieveMessage", `${username} : ${message}`);
+        });
+
+        connection.on("GameCreated", (games) => {
+            console.log("GameCreated received:", games);
+            setAvailableGames(games);
+            addMessage("GameCreated", games);
+        });
+        connection.on("PlayerJoined", (username) => {
+            console.log("PlayerJoined received:", username);
+            addMessage("PlayerJoined", username);
+        });
+
+        connection.on("GameStateUpdated", (games) => {
+            console.log("GameStateUpdated received:", games);
+            setAvailableGames(games);
+            addMessage("GameStateUpdated", games);
+        });
+
+        connection.on("GameStarted", (games) => {
+            console.log("GameStarted received:", games);
+            setAvailableGames(games);
+            addMessage("GameStarted", games);
+        });
+
+        connection.on("CardDrawn", (playerId, card) => {
+            console.log("CardDrawn received:", playerId, card);
+            addMessage("CardDrawn", `${playerId} - ${card}`);
+        });
+
+
 
         try {
             await connection.start();

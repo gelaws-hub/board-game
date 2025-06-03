@@ -19,6 +19,16 @@ namespace PokerGameCore.Hubs
             await Clients.All.SendAsync("AvailableGamesUpdated", games);
         }
 
+        public async Task<Game> CreateGame()
+        {
+            var game = _gameService.CreateGame();
+
+            await BroadcastGameList();
+            await Clients.Caller.SendAsync("GameCreated", game);
+
+            return game;
+        }
+
         public async Task JoinGame(Guid gameId, string username)
         {
             var game = _gameService.GetGame(gameId);
@@ -41,7 +51,6 @@ namespace PokerGameCore.Hubs
 
             await Clients.Group(gameId.ToString()).SendAsync("PlayerJoined", user.Username);
 
-            // Optional: send updated player list
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
         }
 

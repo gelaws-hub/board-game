@@ -4,16 +4,9 @@ using PokerGameCore.Domain.Models;
 
 namespace PokerGameCore.Hubs
 {
-    public class GameHub : Hub
+    public class GameHub(GameService gameService) : Hub
     {
-        private readonly GameService _gameService;
-
-        private readonly Dictionary<string, CancellationTokenSource> _heartbeatTokens = new();
-
-        public GameHub(GameService gameService)
-        {
-            _gameService = gameService;
-        }
+        private readonly GameService _gameService = gameService;
 
         public async Task SendMessage(string username, string message)
         {
@@ -100,39 +93,6 @@ namespace PokerGameCore.Hubs
             var game = _gameService.GetGame(gameId);
 
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
-        }
-
-        public override async Task OnConnectedAsync()
-        {
-            var cts = new CancellationTokenSource();
-            _heartbeatTokens.TryAdd(Context.ConnectionId, cts);
-
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    while (!cts.Token.IsCancellationRequested)
-                    {
-                        await Clients.Caller.SendAsync("Heartbeat", $"Server heartbeat: {DateTime.Now:HH:mm:ss}");
-
-                        // Or, if you want ALL clients to see every heartbeat (less common for a direct test)
-                        // await Clients.All.SendAsync("Heartbeat", $"Server heartbeat (to all): {DateTime.Now:HH:mm:ss}");
-
-                        await Task.Delay(3000, cts.Token); // Wait for 3 seconds
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-                    // This is expected when the client disconnects
-                    Console.WriteLine($"Heartbeat task for {Context.ConnectionId} cancelled.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error in heartbeat task for {Context.ConnectionId}: {ex.Message}");
-                }
-            }, cts.Token); // Pass the token to Task.Run
-
-            await base.OnConnectedAsync(); // Call the base method
         }
     }
 }

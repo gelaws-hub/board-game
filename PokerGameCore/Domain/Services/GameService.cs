@@ -4,15 +4,10 @@ using System.Collections.Concurrent;
 
 namespace PokerGameCore.Domain.Services
 {
-    public class GameService
+    public class GameService(IGameRules rules)
     {
-        private readonly IGameRules _rules;
+        private readonly IGameRules _rules = rules;
         private readonly ConcurrentDictionary<Guid, Game> _games = new();
-
-        public GameService(IGameRules rules)
-        {
-            _rules = rules;
-        }
 
         public Game CreateGame()
         {

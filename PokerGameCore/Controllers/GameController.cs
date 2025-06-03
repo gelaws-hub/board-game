@@ -6,14 +6,9 @@ namespace PokerGameCore.Controllers
 {
     [ApiController]
     [Route("game")]
-    public class GameController : ControllerBase
+    public class GameController(GameService gameService) : ControllerBase
     {
-        private readonly GameService _gameService;
-
-        public GameController(GameService gameService)
-        {
-            _gameService = gameService;
-        }
+        private readonly GameService _gameService = gameService;
 
         [HttpPost("create")]
         public IActionResult CreateGame()

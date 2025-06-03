@@ -40,12 +40,12 @@ namespace PokerGameCore.Domain.Services
                 return null;
 
             // Auto-play if it matches the board suit
-            if (drawn.Suit == game.CurrentBoardCard.Suit)
-            {
-                player.Hand.Remove(drawn);
-                game.BoardHistory.Add(drawn);
-                return drawn;
-            }
+            // if (drawn.Suit == game.CurrentBoardCard.Suit)
+            // {
+            //     player.Hand.Remove(drawn);
+            //     game.BoardHistory.Add(drawn);
+            //     return drawn;
+            // }
 
             return drawn;
         }

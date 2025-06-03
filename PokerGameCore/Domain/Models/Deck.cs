@@ -4,7 +4,7 @@ namespace PokerGameCore.Domain.Models
 {
     public class Deck
     {
-        private Stack<Card> cards;
+        private readonly Stack<Card> cards;
 
         public Deck()
         {

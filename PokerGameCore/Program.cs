@@ -3,7 +3,6 @@ using PokerGameCore.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register controllers (this is what was missing)
 builder.Services.AddControllers();
 
 // CORS

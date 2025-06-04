@@ -108,7 +108,10 @@ namespace PokerGameCore.Domain.Services
         public void EndTurn(Guid gameId, Guid playerId)
         {
             var game = GetGame(gameId);
-            if (game?.CurrentPlayer.Id == playerId)
+            if (game?.CurrentPlayer == null)
+                return;
+
+            if (game.CurrentPlayer.Id == playerId)
             {
                 _rules.NextTurn(game);
             }

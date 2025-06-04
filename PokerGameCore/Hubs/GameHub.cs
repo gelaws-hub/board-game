@@ -52,6 +52,8 @@ namespace PokerGameCore.Hubs
             await Clients.Group(gameId.ToString()).SendAsync("PlayerJoined", user.Username);
 
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+
+            await BroadcastGameList();
         }
 
         public async Task StartGame(Guid gameId)

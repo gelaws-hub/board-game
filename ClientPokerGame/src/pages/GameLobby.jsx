@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { useSignalR } from "../context/SignalRContext";
+import GameList from "../components/GameList";
+import { faker } from '@faker-js/faker';
 
 const API_BASE = `${import.meta.env.VITE_POKERCORE}/game`;
 
 function GameLobby() {
+    const dummyName = faker.person.fullName;
+
     const [gameId, setGameId] = useState("");
-    const [username, setUsername] = useState("");
+    const [username, setUsername] = useState(dummyName);
     const [output, setOutput] = useState("");
     const [message, setMessage] = useState("");
     const [playerId, setPlayerId] = useState("");
@@ -22,13 +26,10 @@ function GameLobby() {
             return;
         }
         try {
-            // ** Invoke the Hub method directly **
             const newGame = await invokeHubMethod("CreateGame");
-            setGameId(newGame.id); // Assuming the Game object has an 'id' property
+            setGameId(newGame.id);
             showOutput(newGame);
             addMessage("Hub Invoke: Game Created", newGame);
-            // No need for a separate API call here anymore!
-            // The lobby list will be updated via the "AvailableGamesUpdated" event from the backend.
         } catch (e) {
             addMessage("Hub Invoke Error: Create Game", { error: e.message });
         }
@@ -203,24 +204,11 @@ function GameLobby() {
                 <button type="submit" disabled={!isConnected}>Send Chat</button>
             </form>
 
+            <GameList availableGames={availableGames} />
+
 
             <h3>API Call Output:</h3>
             <pre>{output}</pre>
-
-            <div>
-                <h3>Available Games (from SignalR Hub)</h3>
-                {availableGames.length > 0 ? (
-                    <ul>
-                        {availableGames.map((game) => (
-                            <li key={game.id}>
-                                ID: {game.id} | Players: {game.players.length} | State: {game.state}
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No games available.</p>
-                )}
-            </div>
 
             {renderSignalRMessages()}
         </div>

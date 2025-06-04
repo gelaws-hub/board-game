@@ -1,0 +1,73 @@
+{
+    "id": "9470cff0-9127-4cc3-8719-0585dd486182",
+    "players": [
+        {
+            "id": "e59c65c9-732a-4307-a8e3-5d5c4de26e4a",
+            "user": {
+                "id": "c547cced-2333-4cb5-9207-da91dbb7da4f",
+                "username": "Minnie Roberts DVM",
+                "email": "",
+                "passwordHash": "",
+                "gameHistory": []
+            },
+            "hand": [],
+            "isConnected": true
+        },
+        {
+            "id": "b7663990-3289-4cf8-9563-597df46f2c89",
+            "user": {
+                "id": "9e9bfa2a-d8b8-43b1-ae83-175ebde34688",
+                "username": "Myra Blanda",
+                "email": "",
+                "passwordHash": "",
+                "gameHistory": []
+            },
+            "hand": [],
+            "isConnected": true
+        },
+        {
+            "id": "8f11d961-4c32-41c5-bb37-43a4a6e5cc28",
+            "user": {
+                "id": "461347a5-ecf9-44bd-b2a8-4cf64da3f754",
+                "username": "Salvador Powlowski",
+                "email": "",
+                "passwordHash": "",
+                "gameHistory": []
+            },
+            "hand": [],
+            "isConnected": true
+        },
+        {
+            "id": "2879bf2d-3601-4088-b447-f790d0c783c4",
+            "user": {
+                "id": "642eff24-ed9a-4f28-b93a-79bf48f1d06c",
+                "username": "Willie Kris",
+                "email": "",
+                "passwordHash": "",
+                "gameHistory": []
+            },
+            "hand": [],
+            "isConnected": true
+        }
+    ],
+    "boardHistory": [],
+    "minumPile": {
+        "count": 52,
+        "isEmpty": false
+    },
+    "state": 0,
+    "currentPlayerIndex": 0,
+    "currentBoardCard": null,
+    "currentPlayer": {
+        "id": "e59c65c9-732a-4307-a8e3-5d5c4de26e4a",
+        "user": {
+            "id": "c547cced-2333-4cb5-9207-da91dbb7da4f",
+            "username": "Minnie Roberts DVM",
+            "email": "",
+            "passwordHash": "",
+            "gameHistory": []
+        },
+        "hand": [],
+        "isConnected": true
+    }
+}

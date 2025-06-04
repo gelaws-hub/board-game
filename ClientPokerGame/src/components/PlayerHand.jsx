@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Card from "./Card"
 
-const PlayerHand = ({ hand, onCardClick, toPlay = true }) => {
+const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
     const [selectedCard, setSelectedCard] = useState(null);
     const count = hand.length;
 
@@ -48,7 +48,7 @@ const PlayerHand = ({ hand, onCardClick, toPlay = true }) => {
                     Deselect
                 </button>
             </div>
-            <div className="flex space-x-2 overflow-x-scroll pb-2 w-96 py-4 px-4" style={{ scrollbarWidth: "thin" }}>
+            <div className="flex space-x-2 overflow-x-scroll pb-2 w-96 md:w-[80vw] md:overflow-x-auto py-4 px-4" style={{ scrollbarWidth: "thin" }}>
                 {hand.map((card, index) => (
                     <div
                         key={index}

@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Card from "./Card"
 
-const PlayerHand = ({ hand, onCardClick }) => {
+const PlayerHand = ({ hand, onCardClick, toPlay = true }) => {
     const [selectedCard, setSelectedCard] = useState(null);
+    const count = hand.length;
 
     const handleCardClick = (card) => {
         if (selectedCard && selectedCard.suit === card.suit && selectedCard.rank === card.rank) {
@@ -29,7 +30,7 @@ const PlayerHand = ({ hand, onCardClick }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center">
+        <div className={`flex flex-col items-center justify-center ${toPlay ? "opacity-100" : "opacity-60"}`}>
             <div className="flex space-x-2 mb-4">
                 <button
                     className={`px-3 py-1 bg-white text-blue-950 font-semibold rounded-md ${selectedCard ? 'hover:scale-105' : 'opacity-0 cursor-not-allowed'}`}
@@ -40,7 +41,7 @@ const PlayerHand = ({ hand, onCardClick }) => {
                 </button>
 
                 <button
-                    className={`px-3 py-1 bg-gray-300 text-gray-800 font-semibold rounded-md ${selectedCard ? 'hover:scale-105' : 'opacity-0 cursor-not-allowed'}`}
+                    className={`px-3 py-1 bg-white text-blue-950 font-semibold rounded-md ${selectedCard ? 'hover:scale-105' : 'opacity-0 cursor-not-allowed'}`}
                     onClick={handleDeselectCard}
                     disabled={!selectedCard}
                 >
@@ -61,6 +62,9 @@ const PlayerHand = ({ hand, onCardClick }) => {
                         <Card suit={card.suit} rank={card.rank} onClick={() => handleCardClick(card)} />
                     </div>
                 ))}
+                <div className={`bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs absolute top-8`}>
+                    My cards : {count}
+                </div>
             </div>
         </div>
     )

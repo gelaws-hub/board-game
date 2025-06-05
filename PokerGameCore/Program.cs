@@ -1,5 +1,7 @@
 using PokerGameCore.Domain.Services;
 using PokerGameCore.Hubs;
+using System.Text.Json.Serialization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +13,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:5173")
+            .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:5173", "https://gourav-d.github.io")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -19,9 +21,15 @@ builder.Services.AddCors(options =>
 });
 
 // Register SignalR and your custom services
-builder.Services.AddSignalR();
+// builder.Services.AddSignalR();
 builder.Services.AddSingleton<IGameRules, MinumanGameRules>();
 builder.Services.AddSingleton<GameService>();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 
 var app = builder.Build();
 app.UseCors();

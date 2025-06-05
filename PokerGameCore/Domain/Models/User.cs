@@ -7,6 +7,6 @@ namespace PokerGameCore.Domain.Models
         public string Email { get; set; } = "";
         public string PasswordHash { get; set; } = "";
 
-        public List<Game> GameHistory { get; set; } = new();
+        public List<Game> GameHistory { get; set; } = [];
     }
 }

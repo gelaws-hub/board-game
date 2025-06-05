@@ -30,7 +30,7 @@ namespace PokerGameCore.Domain.Services
             if (game.State != GameState.WaitingForPlayers)
                 return false;
 
-            if (game.Players.Any(p => p.User.Id == user.Id))
+            if (game.Players.Any(p => p.User.Id == user.Id || p.User.Username == user.Username))
                 return false;
 
             game.Players.Add(new Player { Id = Guid.NewGuid(), User = user });
@@ -74,7 +74,7 @@ namespace PokerGameCore.Domain.Services
             if (game == null || player == null)
                 return false;
 
-            if (game.CurrentPlayer.Id != playerId)
+            if (game.CurrentPlayer?.Id != playerId)
                 return false;
 
             var success = _rules.TryPlayCard(game, player, card);
@@ -99,7 +99,7 @@ namespace PokerGameCore.Domain.Services
             var game = GetGame(gameId);
             var player = game?.Players.FirstOrDefault(p => p.Id == playerId);
 
-            if (game == null || player == null || game.CurrentPlayer.Id != playerId)
+            if (game == null || player == null || game.CurrentPlayer?.Id != playerId)
                 return null;
 
             return _rules.DrawCard(game, player);

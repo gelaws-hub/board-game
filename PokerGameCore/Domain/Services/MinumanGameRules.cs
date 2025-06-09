@@ -55,12 +55,24 @@ namespace PokerGameCore.Domain.Services
 
         public void NextTurn(Game game)
         {
-            // this prevents a bug
-            int expectedCards = game.Players.Count;
-            if (game.CurrentBoardCard != null)
-                expectedCards -= 1;
+            int expectedCards;
 
-            if (game.CurrentSubRoundCards.Count == expectedCards)
+            // First sub-round of a full round (everyone plays)
+            if (game.CurrentBoardCard == null)
+            {
+                expectedCards = game.Players.Count;
+            }
+            else
+            {
+                // Sub-rounds after the first (1 player has already played into CurrentBoardCard)
+                expectedCards = game.Players.Count;
+            }
+
+            // Now include the CurrentBoardCard as the first card in the round
+            int totalCardsThisRound = game.CurrentSubRoundCards.Count;
+
+            // If the expected number of cards for this round is played
+            if (totalCardsThisRound == expectedCards)
             {
                 CardSuit firstCardSuit = game.CurrentSubRoundCards[0].Suit;
                 Card highestCard = game.CurrentSubRoundCards
@@ -73,16 +85,22 @@ namespace PokerGameCore.Domain.Services
 
                 if (winnerIndex != -1)
                 {
+                    // Assign new starting player for next sub-round
                     game.CurrentPlayerIndex = winnerIndex;
+
+                    // Push cards to history and prepare next sub-round
                     game.BoardHistory.AddRange(game.CurrentSubRoundCards);
                     game.CurrentSubRoundCards.Clear();
+
                     return;
                 }
             }
 
-            // Move to next player in round-robin
+            // Otherwise, continue to the next player in turn
             game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
+
+
 
         private static void RefillMinumPile(Game game)
         {

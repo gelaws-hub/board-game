@@ -86,7 +86,7 @@ const Game = () => {
     const handleStartGame = async () => {
         try {
             setActionInProgress(true)
-            await invokeHubMethod("StartGame", gameId, username)
+            await invokeHubMethod("StartGame", gameId, username, 5)
         } catch (error) {
             addMessage("Start Game Error", error.message)
         } finally {

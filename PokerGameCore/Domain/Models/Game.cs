@@ -16,7 +16,6 @@ namespace PokerGameCore.Domain.Models
         public GameState State { get; set; } = GameState.WaitingForPlayers;
         public int CurrentPlayerIndex { get; set; } = 0;
 
-        // ✅ Derived directly from sub-round cards, not board history
         public Card? CurrentBoardCard => CurrentSubRoundCards.LastOrDefault();
 
         public Player? CurrentPlayer =>
@@ -37,7 +36,6 @@ namespace PokerGameCore.Domain.Models
                    ?? throw new Exception("Player not found");
         }
 
-        // ✅ Utility for getting current board state (cards in this sub-round)
         public IReadOnlyList<Card> GetCurrentBoard() => CurrentSubRoundCards.AsReadOnly();
     }
 }

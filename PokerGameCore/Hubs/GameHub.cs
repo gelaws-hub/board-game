@@ -90,7 +90,8 @@ namespace PokerGameCore.Hubs
 
             await Groups.AddToGroupAsync(Context.ConnectionId, gameId.ToString());
             await Clients.Group(gameId.ToString()).SendAsync("PlayerJoined", user);
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            await PrivateGameView(gameId);
+            await Clients.Caller.SendAsync("GameJoined", game);
             await BroadcastGameList();
         }
 
@@ -114,6 +115,7 @@ namespace PokerGameCore.Hubs
 
             await Clients.Group(gameId.ToString()).SendAsync("PlayerReady", player);
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            await Clients.Group(gameId.ToString()).SendAsync("IsAllPlayersReady", game.IsAllPlayersReady);
             await PrivateGameView(gameId);
         }
 
@@ -267,9 +269,9 @@ namespace PokerGameCore.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task Reconnect(Guid GameId, string username)
+        public async Task Reconnect(Guid gameId, string username)
         {
-            Game? game = _gameService.GetGame(GameId);
+            Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
                 await Clients.Caller.SendAsync("Error", "Game not found.");
@@ -283,12 +285,43 @@ namespace PokerGameCore.Hubs
                 return;
             }
 
-            // Re-map the connection ID
+            // Remove any old connections and map new one
             _connections.RemoveConnection(Context.ConnectionId);
+            _connections.MapPlayerToConnection(player.Id, Context.ConnectionId);
+
+            // Add player back to SignalR group for the game
+            await Groups.AddToGroupAsync(Context.ConnectionId, gameId.ToString());
+
+            // Notify the client with updated game view
+            var personalGameView = new
             {
-                _connections.MapPlayerToConnection(player.Id, Context.ConnectionId);
-                Console.WriteLine($"Player {player.User.Username} - {player.Id} reconnected with {Context.ConnectionId}");
-            }
+                gameId = game.Id,
+                gameState = game.State,
+                currentTurnPlayer = game.CurrentPlayer,
+                playerInfo = player,
+                opponents = game.Players
+                    .Where(p => p.Id != player.Id)
+                    .Select(p => new
+                    {
+                        playerId = p.Id,
+                        userId = p.User.Id,
+                        username = p.User.Username,
+                        isConnected = p.IsConnected,
+                        remainingCards = p.RemainingCardNum
+                    }),
+                minumPile = game.MinumPile,
+                boardHistory = game.BoardHistory,
+                currentSubRoundCards = game.CurrentSubRoundCards,
+                currentBoardCard = game.CurrentBoardCard,
+            };
+
+            Console.WriteLine($"Player {player.User.Username} - {player.Id} reconnected with {Context.ConnectionId}");
+
+            // Send updated personal view to client
+            await Clients.Caller.SendAsync("PersonalGameView", personalGameView);
+            // Optional: also update general game state for all
+            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
         }
+
     }
 }

@@ -23,6 +23,7 @@ builder.Services.AddCors(options =>
 // Register SignalR and your custom services
 // builder.Services.AddSignalR();
 builder.Services.AddSingleton<IGameRules, MinumanGameRules>();
+builder.Services.AddSingleton<PlayerConnectionManager>();
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddSignalR()
     .AddJsonProtocol(options =>

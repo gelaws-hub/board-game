@@ -2,8 +2,6 @@ import Card from "./Card"
 
 const GameBoard = ({ boardHistory }) => {
     const shownNum = 4;
-    const totalCards = boardHistory.length;
-    const shownCards = boardHistory.slice(shownNum * -1)
 
     return (
         <div className="bg-green-700 rounded-full w-40 h-40 flex items-center justify-center relative">

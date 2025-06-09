@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSignalR } from "../context/SignalRContext";
 import GameList from "../components/GameList";
 import { faker } from '@faker-js/faker';
@@ -13,7 +13,6 @@ function GameLobby() {
     const [output, setOutput] = useState("");
     const [message, setMessage] = useState("");
     const [playerId, setPlayerId] = useState("");
-    const [playerCards, setPlayerCards] = useState();
     const [selectedCard, setSelectedCard] = useState({ cardSuit: null, cardRank: null });
 
     const { isConnected, invokeHubMethod, messages: signalRMessages, addMessage, availableGames } = useSignalR();

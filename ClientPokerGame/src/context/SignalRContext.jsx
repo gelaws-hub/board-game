@@ -18,13 +18,14 @@ export function SignalRProvider({ children }) {
                 .withAutomaticReconnect()
                 .build();
 
+            // Only non-sensitive global events
             connection.on("AvailableGamesUpdated", (games) => {
                 setAvailableGames(games);
                 addMessage("AvailableGamesUpdated", games);
             });
 
-            connection.on("ReceieveMessage", (username, message) => {
-                addMessage("ReceieveMessage", { username, message });
+            connection.on("ReceiveMessage", (username, message) => {
+                addMessage("ReceiveMessage", { username, message });
             });
 
             connection.on("GameCreated", (game) => {
@@ -33,33 +34,6 @@ export function SignalRProvider({ children }) {
 
             connection.on("PlayerJoined", (username) => {
                 addMessage("PlayerJoined", { username });
-            });
-
-            connection.on("GameStateUpdated", (updatedGame) => {
-                addMessage("GameStateUpdated", updatedGame);
-                console.log("Games Updated: ", updatedGame)
-
-                setAvailableGames((prevGames) => {
-                    const gameIndex = prevGames.findIndex(g => g.id === updatedGame.id);
-                    if (gameIndex !== -1) {
-                        // Update the existing game in the list
-                        const updatedGames = [...prevGames];
-                        updatedGames[gameIndex] = updatedGame;
-                        return updatedGames;
-                    } else {
-                        // Optionally add it if it's not there
-                        return [...prevGames, updatedGame];
-                    }
-                });
-            });
-
-
-            connection.on("GameStarted", (game) => {
-                addMessage("GameStarted", game);
-            });
-
-            connection.on("CardDrawn", (playerId, card) => {
-                addMessage("CardDrawn", { playerId, card });
             });
 
             connection.on("Error", (errorMessage) => {

@@ -5,34 +5,53 @@ using PokerGameCore.Domain.Enums;
 
 namespace PokerGameCore.Hubs
 {
-    public class GameHub(GameService gameService) : Hub
+    public class GameHub(GameService gameService, PlayerConnectionManager connectionManager) : Hub
     {
         private readonly GameService _gameService = gameService;
+        private readonly PlayerConnectionManager _connections = connectionManager;
 
-        public async Task SendMessage(string username, string message)
+        public async Task SendMessage(Guid gameId, string username, string message)
         {
-            await Clients.All.SendAsync("ReceieveMessage", username, message);
+            await Clients.Group(gameId.ToString()).SendAsync("ReceiveMessage", username, message);
         }
 
         public async Task BroadcastGameList()
         {
-            var games = _gameService.GetAllGames();
-            await Clients.All.SendAsync("AvailableGamesUpdated", games);
+            List<Game> games = _gameService.GetAllGames();
+            var basicGameList = games.Select(g => new
+            {
+                gameId = g.Id,
+                gameName = g.Name,
+                playerCount = g.Players.Count,
+                gameState = g.State.ToString(),
+                gameLeader = g.GameLeader?.User.Username ?? "None"
+            }).ToList();
+
+            await Clients.All.SendAsync("AvailableGamesUpdated", basicGameList);
         }
 
-        public async Task<Game> CreateGame()
+        public async Task<Game> CreateGame(string username, string gameName = "New Game")
         {
-            var game = _gameService.CreateGame();
+            User user = new() { Id = Guid.NewGuid(), Username = username };
+            Game game = _gameService.CreateGame(user, gameName);
+
+            // Map connection ID after player is added
+            var player = game.FindPlayerByUsername(username);
+            if (player != null)
+            {
+                _connections.MapPlayerToConnection(player.Id, Context.ConnectionId);
+            }
 
             await BroadcastGameList();
             await Clients.Caller.SendAsync("GameCreated", game);
+            await Groups.AddToGroupAsync(Context.ConnectionId, game.Id.ToString());
 
             return game;
         }
 
         public async Task<User> CreateUser(string username)
         {
-            var user = new User { Id = Guid.NewGuid(), Username = username };
+            User user = new() { Id = Guid.NewGuid(), Username = username };
             await Clients.Caller.SendAsync("UserCreated", user);
 
             return user;
@@ -40,7 +59,7 @@ namespace PokerGameCore.Hubs
 
         public async Task JoinGame(Guid gameId, string username)
         {
-            var game = _gameService.GetGame(gameId);
+            Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
                 await Clients.Caller.SendAsync("Error", "Game not found.");
@@ -48,9 +67,12 @@ namespace PokerGameCore.Hubs
             }
 
             if (game.Players.Any(p => p.User.Username == username))
-                await Clients.Caller.SendAsync("Error", "Please Choose another Username");
+            {
+                await Clients.Caller.SendAsync("Error", "Please choose another username.");
+                return;
+            }
 
-            var user = new User { Id = Guid.NewGuid(), Username = username };
+            User user = new() { Id = Guid.NewGuid(), Username = username };
             bool joined = _gameService.AddPlayerToGame(gameId, user);
 
             if (!joined)
@@ -59,52 +81,90 @@ namespace PokerGameCore.Hubs
                 return;
             }
 
+            // Find and map the player
+            Player? player = game.FindPlayerByUsername(username);
+            if (player != null)
+            {
+                _connections.MapPlayerToConnection(player.Id, Context.ConnectionId);
+            }
+
             await Groups.AddToGroupAsync(Context.ConnectionId, gameId.ToString());
-
             await Clients.Group(gameId.ToString()).SendAsync("PlayerJoined", user);
-
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
-
             await BroadcastGameList();
         }
 
-        public async Task StartGame(Guid gameId)
+        public async Task GetPlayerReady(Guid gameId, string username)
         {
-            var started = _gameService.StartGame(gameId);
-            if (!started)
-            {
-                await Clients.Caller.SendAsync("Error", "Failed to start game.");
-                return;
-            }
-
-            var game = _gameService.GetGame(gameId);
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
-        }
-
-        public async Task PlayCard(Guid gameId, Guid playerId, string cardSuitString, string cardRankString)
-        {
-            var game = _gameService.GetGame(gameId);
+            Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
                 await Clients.Caller.SendAsync("Error", "Game not found.");
                 return;
             }
 
-            var player = game.Players.FirstOrDefault(p => p.Id == playerId);
+            Player? player = game.FindPlayerByUsername(username);
             if (player == null)
             {
                 await Clients.Caller.SendAsync("Error", "Player not found.");
                 return;
             }
 
-            var card = player.FindCardInHand(cardRankString, cardSuitString);
+            _gameService.GetPlayerReady(gameId, player);
+
+            await Clients.Group(gameId.ToString()).SendAsync("PlayerReady", player);
+            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            await PrivateGameView(gameId);
+        }
+
+        public async Task StartGame(Guid gameId, string username, int initialCards = 5)
+        {
+
+            Game? game = _gameService.GetGame(gameId);
+            Player? player = game?.FindPlayerByUsername(username);
+            if (player != game?.GameLeader)
+                throw new Exception("Only the game leader can start the game");
+
+            if (player == null)
+                return;
+
+            await GetPlayerReady(gameId, player.User.Username);
+
+            bool started = _gameService.StartGame(gameId, initialCards);
+            if (!started)
+            {
+                await Clients.Caller.SendAsync("Error", "Failed to start game.");
+                return;
+            }
+
+            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            await PrivateGameView(gameId);
+        }
+
+        public async Task PlayCard(Guid gameId, string username, string cardSuitString, string cardRankString)
+        {
+            Game? game = _gameService.GetGame(gameId);
+            if (game == null)
+            {
+                await Clients.Caller.SendAsync("Error", "Game not found.");
+                return;
+            }
+
+            Player? player = game?.FindPlayerByUsername(username);
+            if (player == null)
+            {
+                await Clients.Caller.SendAsync("Error", "Player not found.");
+                return;
+            }
+
+            Card? card = player.FindCardInHand(cardRankString, cardSuitString);
             if (card == null)
             {
                 await Clients.Caller.SendAsync("Error", $"Card not found in your hand: {cardRankString} of {cardSuitString}.");
                 return;
             }
 
-            bool played = _gameService.PlayCard(gameId, playerId, card);
+            bool played = _gameService.PlayCard(gameId, player, card);
 
             if (!played)
             {
@@ -116,27 +176,29 @@ namespace PokerGameCore.Hubs
             Console.WriteLine($"playcard log : {game} - {played}");
 
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
-        }
-
-        public async Task PlayCardTest(Guid gameId, Guid playerId, Card card)
-        {
-            bool played = _gameService.PlayCard(gameId, playerId, card);
-
-            if (!played)
-            {
-                await Clients.Caller.SendAsync("Error", "Invalid card play.");
-                return;
-            }
-
             await PrivateGameView(gameId);
         }
 
-        public async Task DrawCard(Guid gameId, Guid playerId)
-        {
-            var card = _gameService.DrawCard(gameId, playerId);
-            var game = _gameService.GetGame(gameId);
+        public async Task DrawCard(Guid gameId, string username)
 
-            Console.WriteLine($"drawcard : {game} - {card} - {playerId}");
+        {
+            Game? game = _gameService.GetGame(gameId);
+            if (game == null)
+            {
+                await Clients.Caller.SendAsync("Error", "Game not found.");
+                return;
+            }
+
+            Player? _player = game.FindPlayerByUsername(username);
+            if (_player == null)
+            {
+                await Clients.Caller.SendAsync("Error", "Player not found.");
+                return;
+            }
+
+            Card? card = _gameService.DrawCard(gameId, _player!);
+
+            Console.WriteLine($"drawcard : {game} - {card} - {_player!.Id}");
 
             if (card == null)
             {
@@ -144,21 +206,28 @@ namespace PokerGameCore.Hubs
                 return;
             }
 
-            await Clients.Group(gameId.ToString()).SendAsync("CardDrawn", playerId, card);
+            await Clients.Group(gameId.ToString()).SendAsync("CardDrawn", _player!.Id, card);
+            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            await PrivateGameView(gameId);
+        }
+
+        public async Task EndTurn(Guid gameId, string username)
+        {
+            Game? game = _gameService.GetGame(gameId);
+            if (game == null)
+            {
+                await Clients.Caller.SendAsync("Error", "Game not found.");
+                return;
+            }
+            Player? player = game.FindPlayerByUsername(username);
+            _gameService.EndTurn(gameId, player);
+
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
         }
 
-        public async Task EndTurn(Guid gameId, Guid playerId)
+        public async Task PrivateGameView(Guid gameId)
         {
-            _gameService.EndTurn(gameId, playerId);
-            var game = _gameService.GetGame(gameId);
-
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
-        }
-
-        private async Task PrivateGameView(Guid gameId)
-        {
-            var game = _gameService.GetGame(gameId);
+            Game? game = _gameService.GetGame(gameId);
             if (game == null)
                 return;
 
@@ -167,6 +236,7 @@ namespace PokerGameCore.Hubs
                 var personalGameView = new
                 {
                     gameId = game.Id,
+                    gameState = game.State,
                     currentTurnPlayer = game.CurrentPlayer,
                     playerInfo = player,
                     opponents = game.Players
@@ -174,13 +244,50 @@ namespace PokerGameCore.Hubs
                         .Select(p => new
                         {
                             playerId = p.Id,
-                            user = p.User,
-                            isConnected = p.IsConnected
+                            userId = p.User.Id,
+                            username = p.User.Username,
+                            isConnected = p.IsConnected,
+                            remainingCards = p.RemainingCardNum
                         }),
+                    minumPile = game.MinumPile,
                     boardHistory = game.BoardHistory,
-
+                    currentSubRoundCards = game.CurrentSubRoundCards,
+                    currentBoardCard = game.CurrentBoardCard,
                 };
-                await Clients.User(player.Id.ToString()).SendAsync("GameStateUpdated", personalGameView);
+                if (_connections.TryGetConnection(player.Id, out string? connId))
+                {
+                    await Clients.Client(connId!).SendAsync("PersonalGameView", personalGameView);
+                }
+            }
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            _connections.RemoveConnection(Context.ConnectionId);
+            await base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task Reconnect(Guid GameId, string username)
+        {
+            Game? game = _gameService.GetGame(GameId);
+            if (game == null)
+            {
+                await Clients.Caller.SendAsync("Error", "Game not found.");
+                return;
+            }
+
+            Player? player = game.FindPlayerByUsername(username);
+            if (player == null)
+            {
+                await Clients.Caller.SendAsync("Error", "Player not found.");
+                return;
+            }
+
+            // Re-map the connection ID
+            _connections.RemoveConnection(Context.ConnectionId);
+            {
+                _connections.MapPlayerToConnection(player.Id, Context.ConnectionId);
+                Console.WriteLine($"Player {player.User.Username} - {player.Id} reconnected with {Context.ConnectionId}");
             }
         }
     }

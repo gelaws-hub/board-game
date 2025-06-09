@@ -8,6 +8,7 @@ namespace PokerGameCore.Domain.Models
         public required User User { get; set; }
         public List<Card> Hand { get; set; } = new();
         public bool IsConnected { get; set; } = true;
+        public int RemainingCardNum => Hand.Count;
 
         public Card? FindCardInHand(string rankStr, string suitStr)
         {
@@ -19,5 +20,6 @@ namespace PokerGameCore.Domain.Models
 
             return null;
         }
+        public bool IsReady { get; set; } = false;
     }
 }

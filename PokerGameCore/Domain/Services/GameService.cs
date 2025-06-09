@@ -9,22 +9,25 @@ namespace PokerGameCore.Domain.Services
         private readonly IGameRules _rules = rules;
         private readonly ConcurrentDictionary<Guid, Game> _games = new();
 
-        public Game CreateGame()
+        public Game CreateGame(User user, string gameName)
         {
-            var game = new Game();
+            Game game = new() { Name = gameName };
             _games[game.Id] = game;
+            game.GameLeader = new Player { Id = Guid.NewGuid(), User = user };
+            game.Players.Add(game.GameLeader);
+
             return game;
         }
 
         public Game? GetGame(Guid gameId)
         {
-            _games.TryGetValue(gameId, out var game);
+            _games.TryGetValue(gameId, out Game? game);
             return game;
         }
 
         public bool AddPlayerToGame(Guid gameId, User user)
         {
-            if (!_games.TryGetValue(gameId, out var game))
+            if (!_games.TryGetValue(gameId, out Game? game))
                 return false;
 
             if (game.State != GameState.WaitingForPlayers)
@@ -38,80 +41,98 @@ namespace PokerGameCore.Domain.Services
             return true;
         }
 
-        public bool StartGame(Guid gameId)
+        public void GetPlayerReady(Guid gameId, Player player)
         {
-            if (!_games.TryGetValue(gameId, out var game))
+            if (_games.TryGetValue(gameId, out Game? game))
+            {
+                if (player != null)
+                {
+                    player.IsReady = true;
+                }
+            }
+        }
+
+        public bool StartGame(Guid gameId, int numberOfCards)
+        {
+            if (!_games.TryGetValue(gameId, out Game? game))
                 return false;
 
             if (game.Players.Count < 2)
                 return false;
 
+            if (game.State != GameState.WaitingForPlayers || !game.IsAllPlayersReady)
+                return false;
+
             // Deal 5 cards each (or more)
-            foreach (var player in game.Players)
+            foreach (Player player in game.Players)
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < numberOfCards; i++)
                 {
-                    var card = game.MinumPile.DrawCard();
+                    Card? card = game.MinumPile.DrawCard();
                     if (card != null)
                         player.Hand.Add(card);
                 }
             }
 
             // Initialize first board card
-            var boardCard = game.MinumPile.DrawCard();
+            Card? boardCard = game.MinumPile.DrawCard();
             if (boardCard != null)
-                game.BoardHistory.Add(boardCard);
+                game.CurrentSubRoundCards.Add(boardCard);
 
             game.State = GameState.InProgress;
             return true;
         }
 
-        public bool PlayCard(Guid gameId, Guid playerId, Card card)
+        public bool PlayCard(Guid gameId, Player player, Card card)
         {
-            var game = GetGame(gameId);
-            var player = game?.Players.FirstOrDefault(p => p.Id == playerId);
+            Game? game = GetGame(gameId);
+            Player? _player = game?.Players.FirstOrDefault(p => p.Id == player.Id);
 
-            if (game == null || player == null)
+            if (game?.State != GameState.InProgress)
                 return false;
 
-            if (game.CurrentPlayer?.Id != playerId)
+            if (game == null || _player == null)
                 return false;
 
-            var success = _rules.TryPlayCard(game, player, card);
+            if (game.CurrentPlayer?.Id != player.Id)
+                return false;
+
+            bool success = _rules.TryPlayCard(game, _player, card);
 
             if (success)
             {
-                if (_rules.CheckGameEnd(game, out var winner))
+                _rules.NextTurn(game);
+
+                if (_rules.CheckGameEnd(game, out Player? winner))
                 {
+                    game.GameWinner = winner;
                     game.State = GameState.Finished;
                 }
-                else
-                {
-                    _rules.NextTurn(game);
-                }
             }
-
             return success;
         }
 
-        public Card? DrawCard(Guid gameId, Guid playerId)
+        public Card? DrawCard(Guid gameId, Player player)
         {
-            var game = GetGame(gameId);
-            var player = game?.Players.FirstOrDefault(p => p.Id == playerId);
+            Game? game = GetGame(gameId);
+            Player? _player = game?.Players.FirstOrDefault(p => p.Id == player.Id);
 
-            if (game == null || player == null || game.CurrentPlayer?.Id != playerId)
+            if (game?.State != GameState.InProgress)
                 return null;
 
-            return _rules.DrawCard(game, player);
+            if (game == null || _player == null || game.CurrentPlayer?.Id != player.Id)
+                return null;
+
+            return _rules.DrawCard(game, _player);
         }
 
-        public void EndTurn(Guid gameId, Guid playerId)
+        public void EndTurn(Guid gameId, Player player)
         {
-            var game = GetGame(gameId);
+            Game? game = GetGame(gameId);
             if (game?.CurrentPlayer == null)
                 return;
 
-            if (game.CurrentPlayer.Id == playerId)
+            if (game.CurrentPlayer == player)
             {
                 _rules.NextTurn(game);
             }

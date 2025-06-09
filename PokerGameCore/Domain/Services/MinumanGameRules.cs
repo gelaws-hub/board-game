@@ -1,4 +1,5 @@
 using PokerGameCore.Domain.Models;
+using PokerGameCore.Domain.Enums;
 
 namespace PokerGameCore.Domain.Services
 {
@@ -6,19 +7,18 @@ namespace PokerGameCore.Domain.Services
     {
         public bool TryPlayCard(Game game, Player player, Card card)
         {
-            var boardCard = game.CurrentBoardCard;
-
-            if (boardCard == null)
-                return false;
-
-            if (card.Suit != boardCard.Suit)
-                return false;
-
             if (!player.Hand.Contains(card))
                 return false;
 
+            if (game.CurrentSubRoundCards.Count > 0)
+            {
+                CardSuit firstCardSuit = game.CurrentSubRoundCards[0].Suit;
+                if (card.Suit != firstCardSuit)
+                    return false;
+            }
+
             player.Hand.Remove(card);
-            game.BoardHistory.Add(card);
+            game.CurrentSubRoundCards.Add(card);
             return true;
         }
 
@@ -30,14 +30,11 @@ namespace PokerGameCore.Domain.Services
             if (game.MinumPile.IsEmpty)
                 return null;
 
-            var drawn = game.MinumPile.DrawCard();
+            Card? drawn = game.MinumPile.DrawCard();
             if (drawn == null)
                 return null;
 
             player.Hand.Add(drawn);
-
-            if (game.CurrentBoardCard == null)
-                return null;
 
             // Auto-play if it matches the board suit
             // if (drawn.Suit == game.CurrentBoardCard.Suit)
@@ -58,6 +55,32 @@ namespace PokerGameCore.Domain.Services
 
         public void NextTurn(Game game)
         {
+            // this prevents a bug
+            int expectedCards = game.Players.Count;
+            if (game.CurrentBoardCard != null)
+                expectedCards -= 1;
+
+            if (game.CurrentSubRoundCards.Count == expectedCards)
+            {
+                CardSuit firstCardSuit = game.CurrentSubRoundCards[0].Suit;
+                Card highestCard = game.CurrentSubRoundCards
+                    .Where(c => c.Suit == firstCardSuit)
+                    .OrderByDescending(c => c.Rank)
+                    .First();
+
+                int winnerIndex = game.CurrentSubRoundCards.FindIndex(c =>
+                    c.Suit == highestCard.Suit && c.Rank == highestCard.Rank);
+
+                if (winnerIndex != -1)
+                {
+                    game.CurrentPlayerIndex = winnerIndex;
+                    game.BoardHistory.AddRange(game.CurrentSubRoundCards);
+                    game.CurrentSubRoundCards.Clear();
+                    return;
+                }
+            }
+
+            // Move to next player in round-robin
             game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
 
@@ -66,9 +89,9 @@ namespace PokerGameCore.Domain.Services
             if (game.BoardHistory.Count <= 1)
                 return;
 
+            // Keep the last card on board, recycle the rest into the pile
             var refillSource = game.BoardHistory.Take(game.BoardHistory.Count - 1).ToList();
             game.BoardHistory = game.BoardHistory.Skip(game.BoardHistory.Count - 1).ToList();
-
             game.MinumPile.AddCards(refillSource);
         }
     }

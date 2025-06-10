@@ -9,6 +9,21 @@ namespace PokerGameCore.Hubs
     {
         private readonly GameService _gameService = gameService;
         private readonly PlayerConnectionManager _connections = connectionManager;
+        private static readonly Dictionary<Guid, Timer> _cleanupTimers = [];
+
+        private List<object> BuildBasicGameList()
+        {
+            List<Game> games = _gameService.GetAllGames();
+
+            return games.Select(g => new
+            {
+                gameId = g.Id,
+                gameName = g.Name,
+                playerCount = g.Players.Count,
+                gameState = g.State.ToString(),
+                gameLeader = g.GameLeader?.User.Username ?? "None"
+            }).Cast<object>().ToList();
+        }
 
         public async Task SendMessage(Guid gameId, string username, string message)
         {
@@ -17,16 +32,7 @@ namespace PokerGameCore.Hubs
 
         public async Task BroadcastGameList()
         {
-            List<Game> games = _gameService.GetAllGames();
-            var basicGameList = games.Select(g => new
-            {
-                gameId = g.Id,
-                gameName = g.Name,
-                playerCount = g.Players.Count,
-                gameState = g.State.ToString(),
-                gameLeader = g.GameLeader?.User.Username ?? "None"
-            }).ToList();
-
+            var basicGameList = BuildBasicGameList();
             await Clients.All.SendAsync("AvailableGamesUpdated", basicGameList);
         }
 
@@ -175,6 +181,22 @@ namespace PokerGameCore.Hubs
             }
 
             game = _gameService.GetGame(gameId);
+
+            // Delete the game from dictionary after finishing
+            if (game?.State == GameState.Finished && !_cleanupTimers.ContainsKey(game.Id))
+            {
+                Timer timer = new(_ =>
+                {
+                    _gameService.DeleteGame(game.Id);
+                    _cleanupTimers.Remove(game.Id);
+                    Console.WriteLine($"Game {game.Id} deleted 5 minutes after finishing.");
+
+                }, null, TimeSpan.FromMinutes(5), Timeout.InfiniteTimeSpan);
+
+
+                _cleanupTimers[game.Id] = timer;
+            }
+
 
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
             await PrivateGameView(gameId);

@@ -142,5 +142,12 @@ namespace PokerGameCore.Domain.Services
         {
             return _games.Values.ToList();
         }
+
+        public void DeleteGame(Guid gameId)
+        {
+            if (_games.Remove(gameId, out _))
+                Console.WriteLine($"Game {gameId} has been deleted.");
+        }
+
     }
 }

@@ -49,7 +49,7 @@ function GameLobby() {
       const gameName = newGameName.trim() || `${username}'s Game`
       const newGame = await invokeHubMethod("CreateGame", username, gameName)
       addMessage("Hub Invoke: Game Created", newGame)
-      navigate(`/game/${newGame.id}`)
+      navigate(`/game/?room=${newGame.id}`)
     } catch (e) {
       addMessage("Hub Invoke Error: Create Game", { error: e.message })
     } finally {
@@ -61,7 +61,7 @@ function GameLobby() {
   const handleJoinGame = async (gameId) => {
     try {
       await invokeHubMethod("JoinGame", gameId, username)
-      navigate(`/game/${gameId}`)
+      navigate(`/game/?room=${gameId}`)
     } catch (error) {
       addMessage("Join Game Error", error.message)
     }

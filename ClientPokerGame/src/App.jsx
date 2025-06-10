@@ -28,7 +28,7 @@ const AppContent = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/game/:gameId" element={<Game />} />
+        <Route path="/game" element={<Game />} />
         <Route path="/" element={<GameLobby />} />
         <Route path="*" element={<div className="flex items-center justify-center h-screen">Redirect to a game</div>} />
       </Routes>

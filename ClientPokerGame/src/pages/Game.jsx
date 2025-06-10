@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams, useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { useSignalR } from "../context/SignalRContext"
 import GameBoard from "../components/GameBoard"
@@ -9,8 +9,12 @@ import OpponentHand from "../components/OpponentHand"
 import RemainingDeck from "../components/RemainingDeck"
 
 const Game = () => {
-    const { gameId } = useParams()
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const gameId = searchParams.get('room');
+
     const navigate = useNavigate()
+
     const {
         isConnected,
         invokeHubMethod,
@@ -319,10 +323,10 @@ const Game = () => {
                     <div
                         key={opponent.playerId}
                         className={`absolute ${position === "left"
-                                ? "-left-10 top-1/2 transform -translate-y-1/2 rotate-90"
-                                : position === "top"
-                                    ? "top-10 left-1/2 transform -translate-x-1/2"
-                                    : "-right-10 top-1/2 transform -translate-y-1/2 rotate-90"
+                            ? "-left-10 top-1/2 transform -translate-y-1/2 rotate-90"
+                            : position === "top"
+                                ? "top-10 left-1/2 transform -translate-x-1/2"
+                                : "-right-10 top-1/2 transform -translate-y-1/2 rotate-90"
                             }`}
                     >
                         <OpponentHand position={position} count={opponent.remainingCards} />

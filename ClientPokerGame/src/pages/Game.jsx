@@ -139,6 +139,8 @@ const Game = () => {
         }
     }
 
+    console.log("Messages:", chatMessage)
+
     // Use personalGameView if available, otherwise fall back to currentGame
     const gameData = personalGameView || currentGame
 

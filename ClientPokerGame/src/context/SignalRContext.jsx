@@ -59,6 +59,7 @@ export function SignalRProvider({ children }) {
 
       connection.on("ReceiveMessage", (username, message) => {
         addMessage("ReceiveMessage", { username, message })
+        console.log("message", messages)
       })
 
       connection.on("Error", (errorMessage) => {
@@ -98,8 +99,6 @@ export function SignalRProvider({ children }) {
     }
 
     connect()
-
-    console.log("message", messages)
 
     return () => {
       connectionRef.current?.stop()

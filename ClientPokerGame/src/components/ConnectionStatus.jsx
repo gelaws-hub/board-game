@@ -1,4 +1,3 @@
-// Create a new component to show connection status
 import { useSignalR } from "../context/SignalRContext"
 
 const ConnectionStatus = () => {
@@ -11,7 +10,9 @@ const ConnectionStatus = () => {
           reconnecting ? "bg-yellow-400" : isConnected ? "bg-green-400" : "bg-red-400"
         } ${reconnecting ? "animate-pulse" : ""}`}
       ></div>
-      <span>{reconnecting ? "Reconnecting..." : isConnected ? "Connected" : "Disconnected"}</span>
+      <span className="text-gray-400">
+        {reconnecting ? "Reconnecting..." : isConnected ? "Connected" : "Disconnected"}
+      </span>
     </div>
   )
 }

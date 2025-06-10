@@ -19,6 +19,7 @@ namespace PokerGameCore.Domain.Services
 
             player.Hand.Remove(card);
             game.CurrentSubRoundCards.Add(card);
+            game.CurrentSubRoundPlays.Add((card, player));
             return true;
         }
 
@@ -55,49 +56,28 @@ namespace PokerGameCore.Domain.Services
 
         public void NextTurn(Game game)
         {
-            int expectedCards;
+            int expectedPlays = game.Players.Count;
 
-            // First sub-round of a full round (everyone plays)
-            if (game.CurrentBoardCard == null)
+            if (game.CurrentSubRoundPlays.Count == expectedPlays)
             {
-                expectedCards = game.Players.Count;
+                var leadSuit = game.CurrentSubRoundPlays[0].Card.Suit;
+
+                var winningPlay = game.CurrentSubRoundPlays
+                    .Where(p => p.Card.Suit == leadSuit)
+                    .OrderByDescending(p => p.Card.Rank)
+                    .First();
+
+                game.SubRoundWinner = winningPlay.Player;
+                game.CurrentPlayerIndex = game.Players.FindIndex(p => p.Id == winningPlay.Player.Id);
+
+                game.BoardHistory.AddRange(game.CurrentSubRoundPlays.Select(p => p.Card));
+                game.CurrentSubRoundPlays.Clear();
+                game.CurrentSubRoundCards.Clear();
             }
             else
             {
-                // Sub-rounds after the first (1 player has already played into CurrentBoardCard)
-                expectedCards = game.Players.Count;
+                game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
             }
-
-            // Now include the CurrentBoardCard as the first card in the round
-            int totalCardsThisRound = game.CurrentSubRoundCards.Count;
-
-            // If the expected number of cards for this round is played
-            if (totalCardsThisRound == expectedCards)
-            {
-                CardSuit firstCardSuit = game.CurrentSubRoundCards[0].Suit;
-                Card highestCard = game.CurrentSubRoundCards
-                    .Where(c => c.Suit == firstCardSuit)
-                    .OrderByDescending(c => c.Rank)
-                    .First();
-
-                int winnerIndex = game.CurrentSubRoundCards.FindIndex(c =>
-                    c.Suit == highestCard.Suit && c.Rank == highestCard.Rank);
-
-                if (winnerIndex != -1)
-                {
-                    // Assign new starting player for next sub-round
-                    game.CurrentPlayerIndex = winnerIndex;
-
-                    // Push cards to history and prepare next sub-round
-                    game.BoardHistory.AddRange(game.CurrentSubRoundCards);
-                    game.CurrentSubRoundCards.Clear();
-
-                    return;
-                }
-            }
-
-            // Otherwise, continue to the next player in turn
-            game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
 
 

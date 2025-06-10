@@ -175,7 +175,6 @@ namespace PokerGameCore.Hubs
             }
 
             game = _gameService.GetGame(gameId);
-            Console.WriteLine($"playcard log : {game} - {played}");
 
             await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
             await PrivateGameView(gameId);

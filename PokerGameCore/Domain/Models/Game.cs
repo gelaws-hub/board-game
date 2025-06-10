@@ -9,6 +9,8 @@ namespace PokerGameCore.Domain.Models
         public List<Player> Players { get; set; } = [];
         public Player? GameLeader { get; set; }
         public Player? GameWinner { get; set; }
+        public Player? SubRoundWinner { get; set; }
+        public List<(Card Card, Player Player)> CurrentSubRoundPlays { get; set; } = [];
 
         public List<Card> BoardHistory { get; set; } = [];
         public List<Card> CurrentSubRoundCards { get; set; } = [];

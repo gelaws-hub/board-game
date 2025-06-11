@@ -147,7 +147,7 @@ const Game = () => {
     }
 
     // Use personalGameView if available, otherwise fall back to currentGame
-    const gameData = personalGameView || currentGame
+    const gameData = personalGameView
 
     if (!gameData) {
         return (
@@ -156,6 +156,16 @@ const Game = () => {
                     <div className="text-4xl mb-4">🎲</div>
                     <div className="text-xl mb-2">{reconnecting ? "Reconnecting to game..." : "Loading game..."}</div>
                     <div className="text-xs opacity-75">Game ID: {gameId}</div>
+                    <div className="text-xs opacity-75 mt-4">
+                        If loading takes too long, there is a chance you are no longer connected.
+                    </div>
+                    <button
+                        onClick={() => navigate("/") || window.location.reload()}
+                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                    >
+                        Go to Lobby
+                    </button>
+
                     {!isConnected && (
                         <div className="text-red-300 mt-4">
                             {reconnecting ? "Attempting to reconnect..." : "Not connected to server"}
@@ -171,31 +181,31 @@ const Game = () => {
         )
     }
 
-    const isGameLeader = currentGame?.gameLeader?.user?.username === username
-    const currentPlayer = personalGameView
-        ? personalGameView.playerInfo
-        : currentGame?.players?.find((p) => p.user.username === username)
-    const isMyTurn = personalGameView
-        ? personalGameView.currentTurnPlayer?.user?.username === username
-        : currentGame?.currentPlayer?.user?.username === username
+    const isGameLeader = personalGameView?.gameLeader?.user?.username === username
+    const currentPlayer = personalGameView.playerInfo
+    const isMyTurn = personalGameView.currentPlayer?.user?.username === username
 
-    // Render different states
-    if (gameData.gameState === "WaitingForPlayers" || gameData.state === "WaitingForPlayers") {
+    console.log("Game Data:", gameData)
+    console.log("Game leader : ", gameData.gameLeader)
+
+    // Render waiting for players
+    if (gameData.state === "WaitingForPlayers") {
         return (
             <div className="h-screen w-screen bg-green-800 flex items-center justify-center">
                 <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center">
                     <h2 className="text-2xl font-bold mb-4">Waiting for Players</h2>
                     <div className="mb-6">
                         <div className="text-sm text-gray-600 mb-4">Game ID: {gameId}</div>
+                        <div className="text-md text-gray-800 mb-4">Game Name: {gameData.name}</div>
                         <div className="space-y-2">
-                            {(currentGame?.players || []).map((player) => (
+                            {(gameData?.players || []).map((player) => (
                                 <div key={player.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                                     <div className="flex items-center gap-2">
                                         <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                                             {player.user.username.charAt(0).toUpperCase()}
                                         </div>
                                         <span>{player.user.username}</span>
-                                        {currentGame?.gameLeader?.id === player.id && (
+                                        {gameData?.gameLeader?.id === player.id && (
                                             <span className="text-xs bg-yellow-200 px-2 py-1 rounded">Host</span>
                                         )}
                                     </div>
@@ -221,7 +231,7 @@ const Game = () => {
                             </button>
                         )}
 
-                        {isGameLeader && currentGame?.isAllPlayersReady && (
+                        {isGameLeader && gameData?.isAllPlayersReady && (
                             <button
                                 onClick={handleStartGame}
                                 disabled={!isConnected || actionInProgress}
@@ -248,10 +258,10 @@ const Game = () => {
             <div className="h-screen w-screen bg-green-800 flex items-center justify-center">
                 <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center">
                     <h2 className="text-3xl font-bold mb-4">🎉 Game Over!</h2>
-                    {currentGame?.gameWinner && (
+                    {gameData?.gameWinner && (
                         <div className="mb-6">
                             <div className="text-lg mb-2">Winner:</div>
-                            <div className="text-2xl font-bold text-green-600">{currentGame.gameWinner.user.username}</div>
+                            <div className="text-2xl font-bold text-green-600">{gameData.gameWinner.user.username}</div>
                         </div>
                     )}
                     <button
@@ -274,7 +284,7 @@ const Game = () => {
 
     return (
         <div className="h-screen w-screen bg-green-800 overflow-hidden relative">
-            <TurnToast playerUsername={username} currentUsername={currentGame?.currentPlayer?.user?.username} />
+            <TurnToast playerUsername={username} currentUsername={gameData?.currentPlayer?.user?.username} />
             <div className="absolute bottom-2 left-2 text-white/70 text-xs">Game ID: {gameId}</div>
 
             {/* Chat toggle */}
@@ -297,7 +307,7 @@ const Game = () => {
                             Close
                         </button>
                     </div>
-                    <div className="h-[75vw] overflow-y-auto p-4 text-sm">
+                    <div className="h-[50vh] overflow-y-auto p-4 text-sm">
                         {chat?.map((chat, index) => (
                             <div className={`bg-green-50/70 rounded-lg p-2 mb-2 ${chat.data.username === username ? "ml-4 rounded-br-none" : "mr-4 rounded-tl-none"}`}>
                                 <div key={index} className={`text-sm`}>
@@ -327,7 +337,7 @@ const Game = () => {
 
             <div className="bg-green-900 p-1 text-green-100">
                 <h2 className="text-center">
-                    Turn: {personalGameView?.currentTurnPlayer?.user?.username || "Loading..."}
+                    Turn: {personalGameView?.currentPlayer?.user?.username || "Loading..."}
                     {isMyTurn && <span className="ml-2 text-yellow-300">← Your Turn!</span>}
                 </h2>
             </div>
@@ -347,7 +357,7 @@ const Game = () => {
                                 : "-right-10 top-1/2 transform -translate-y-1/2 rotate-90"
                             }`}
                     >
-                        <OpponentHand position={position} count={opponent.remainingCards} />
+                        <OpponentHand position={position} count={opponent.remainingCardNum} />
                         <p
                             className={`absolute bg-black bg-opacity-50 text-white px-2 py-2 rounded-full text-xs text-center ${position === "top" ? "" : "-rotate-90 bottom-7 -right-16"
                                 }`}

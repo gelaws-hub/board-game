@@ -37,7 +37,7 @@ function GameLobby() {
   }
 
   const generateRandomName = () => {
-    setEditName(faker.person.fullName())
+    setEditName(faker.person.firstName())
   }
 
   const handleCreateGame = async () => {

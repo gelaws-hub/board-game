@@ -52,6 +52,8 @@ namespace PokerGameCore.Hubs
             await Clients.Caller.SendAsync("GameCreated", game);
             await Groups.AddToGroupAsync(Context.ConnectionId, game.Id.ToString());
 
+            ResetGameTimeout(game.Id, 60);
+
             return game;
         }
 
@@ -65,6 +67,7 @@ namespace PokerGameCore.Hubs
 
         public async Task JoinGame(Guid gameId, string username)
         {
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
@@ -103,6 +106,7 @@ namespace PokerGameCore.Hubs
 
         public async Task GetPlayerReady(Guid gameId, string username)
         {
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
@@ -120,14 +124,14 @@ namespace PokerGameCore.Hubs
             _gameService.GetPlayerReady(gameId, player);
 
             await Clients.Group(gameId.ToString()).SendAsync("PlayerReady", player);
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            // await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
             await Clients.Group(gameId.ToString()).SendAsync("IsAllPlayersReady", game.IsAllPlayersReady);
             await PrivateGameView(gameId);
         }
 
         public async Task StartGame(Guid gameId, string username, int initialCards = 5)
         {
-
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             Player? player = game?.FindPlayerByUsername(username);
             if (player != game?.GameLeader)
@@ -145,12 +149,13 @@ namespace PokerGameCore.Hubs
                 return;
             }
 
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            // await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
             await PrivateGameView(gameId);
         }
 
         public async Task PlayCard(Guid gameId, string username, string cardSuitString, string cardRankString)
         {
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
@@ -185,26 +190,15 @@ namespace PokerGameCore.Hubs
             // Delete the game from dictionary after finishing
             if (game?.State == GameState.Finished && !_cleanupTimers.ContainsKey(game.Id))
             {
-                Timer timer = new(_ =>
-                {
-                    _gameService.DeleteGame(game.Id);
-                    _cleanupTimers.Remove(game.Id);
-                    Console.WriteLine($"Game {game.Id} deleted 5 minutes after finishing.");
-
-                }, null, TimeSpan.FromMinutes(5), Timeout.InfiniteTimeSpan);
-
-
-                _cleanupTimers[game.Id] = timer;
+                ResetGameTimeout(gameId, 5);
             }
 
-
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
             await PrivateGameView(gameId);
         }
 
         public async Task DrawCard(Guid gameId, string username)
-
         {
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
@@ -230,12 +224,12 @@ namespace PokerGameCore.Hubs
             }
 
             await Clients.Group(gameId.ToString()).SendAsync("CardDrawn", _player!.Id, card);
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
             await PrivateGameView(gameId);
         }
 
         public async Task EndTurn(Guid gameId, string username)
         {
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
@@ -245,11 +239,12 @@ namespace PokerGameCore.Hubs
             Player? player = game.FindPlayerByUsername(username);
             _gameService.EndTurn(gameId, player);
 
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            await PrivateGameView(gameId);
         }
 
         public async Task PrivateGameView(Guid gameId)
         {
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             if (game == null)
                 return;
@@ -258,10 +253,8 @@ namespace PokerGameCore.Hubs
             {
                 var personalGameView = new
                 {
-                    gameId = game.Id,
-                    gameState = game.State,
-                    currentTurnPlayer = game.CurrentPlayer,
-                    playerInfo = player,
+                    id = game.Id,
+                    name = game.Name,
                     opponents = game.Players
                         .Where(p => p.Id != player.Id)
                         .Select(p => new
@@ -270,12 +263,35 @@ namespace PokerGameCore.Hubs
                             userId = p.User.Id,
                             username = p.User.Username,
                             isConnected = p.IsConnected,
-                            remainingCards = p.RemainingCardNum
+                            remainingCardNum = p.RemainingCardNum
                         }),
-                    minumPile = game.MinumPile,
-                    boardHistory = game.BoardHistory,
+                    players = game.Players.Select(p => new
+                    {
+                        id = p.Id,
+                        user = p.User,
+                        isConnected = p.IsConnected,
+                        remainingCardNum = p.RemainingCardNum,
+                        isReady = p.IsReady
+                    }),
+                    gameLeader = new
+                    {
+                        id = game.GameLeader?.Id,
+                        user = game.GameLeader?.User,
+                        isConnected = game.GameLeader?.IsConnected,
+                        remainingCardNum = game.GameLeader?.RemainingCardNum,
+                        isReady = game.GameLeader?.IsReady
+                    },
+                    currentSubRoundPlays = game.CurrentSubRoundPlays,
                     currentSubRoundCards = game.CurrentSubRoundCards,
+                    boardHistory = game.BoardHistory,
+                    minumPile = game.MinumPile,
+                    state = game.State,
+                    gameWinner = game.GameWinner,
+                    currentPlayerIndex = game.CurrentPlayerIndex,
                     currentBoardCard = game.CurrentBoardCard,
+                    currentPlayer = game.CurrentPlayer,
+                    isAllPlayersReady = game.IsAllPlayersReady,
+                    playerInfo = player
                 };
                 if (_connections.TryGetConnection(player.Id, out string? connId))
                 {
@@ -292,6 +308,7 @@ namespace PokerGameCore.Hubs
 
         public async Task Reconnect(Guid gameId, string username)
         {
+            ResetGameTimeout(gameId);
             Game? game = _gameService.GetGame(gameId);
             if (game == null)
             {
@@ -313,36 +330,30 @@ namespace PokerGameCore.Hubs
             // Add player back to SignalR group for the game
             await Groups.AddToGroupAsync(Context.ConnectionId, gameId.ToString());
 
-            // Notify the client with updated game view
-            var personalGameView = new
-            {
-                gameId = game.Id,
-                gameState = game.State,
-                currentTurnPlayer = game.CurrentPlayer,
-                playerInfo = player,
-                opponents = game.Players
-                    .Where(p => p.Id != player.Id)
-                    .Select(p => new
-                    {
-                        playerId = p.Id,
-                        userId = p.User.Id,
-                        username = p.User.Username,
-                        isConnected = p.IsConnected,
-                        remainingCards = p.RemainingCardNum
-                    }),
-                minumPile = game.MinumPile,
-                boardHistory = game.BoardHistory,
-                currentSubRoundCards = game.CurrentSubRoundCards,
-                currentBoardCard = game.CurrentBoardCard,
-            };
-
             Console.WriteLine($"Player {player.User.Username} - {player.Id} reconnected with {Context.ConnectionId}");
 
-            // Send updated personal view to client
-            await Clients.Caller.SendAsync("PersonalGameView", personalGameView);
-            // Optional: also update general game state for all
-            await Clients.Group(gameId.ToString()).SendAsync("GameStateUpdated", game);
+            await PrivateGameView(gameId);
         }
 
+        private void ResetGameTimeout(Guid gameId, int minutes = 10)
+        {
+            // Cancel and dispose old timer if exists
+            if (_cleanupTimers.TryGetValue(gameId, out var oldTimer))
+            {
+                oldTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                oldTimer.Dispose();
+                _cleanupTimers.Remove(gameId);
+            }
+
+            // Create a new timer for 10 minutes
+            Timer timer = new(_ =>
+            {
+                _gameService.DeleteGame(gameId);
+                _cleanupTimers.Remove(gameId);
+                Console.WriteLine($"Game {gameId} deleted after 10 minutes of inactivity.");
+            }, null, TimeSpan.FromMinutes(minutes), Timeout.InfiniteTimeSpan);
+
+            _cleanupTimers[gameId] = timer;
+        }
     }
 }

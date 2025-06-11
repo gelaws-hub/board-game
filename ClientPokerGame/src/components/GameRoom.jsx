@@ -33,7 +33,6 @@ const GameRoom = () => {
         let hasJoined = false
 
         const handleGameStateUpdated = (game) => {
-            console.log("Game state updated:", game)
             setGameData(game)
             setIsLoading(false)
 

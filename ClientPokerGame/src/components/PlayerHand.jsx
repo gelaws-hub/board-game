@@ -69,9 +69,9 @@ const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
 
   return (
     <div className={`flex flex-col items-center justify-center ${toPlay ? "opacity-100" : "opacity-60"}`}>
-      <div className="flex space-x-2 mb-4">
+      <div className="flex space-x-2 mb-2 sm:mb-4">
         <button
-          className={`px-3 py-1 bg-white text-blue-950 font-semibold rounded-md transition-all ${
+          className={`px-2 sm:px-3 py-1 bg-white text-blue-950 font-semibold rounded-md transition-all text-xs sm:text-sm ${
             selectedCard && toPlay ? "hover:scale-105 opacity-100" : "opacity-0 cursor-not-allowed"
           }`}
           onClick={handlePlayCard}
@@ -81,7 +81,7 @@ const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
         </button>
 
         <button
-          className={`px-3 py-1 bg-white text-blue-950 font-semibold rounded-md transition-all ${
+          className={`px-2 sm:px-3 py-1 bg-white text-blue-950 font-semibold rounded-md transition-all text-xs sm:text-sm ${
             selectedCard ? "hover:scale-105 opacity-100" : "opacity-0 cursor-not-allowed"
           }`}
           onClick={handleDeselectCard}
@@ -91,7 +91,7 @@ const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
         </button>
       </div>
       <div
-        className="flex space-x-2 overflow-x-scroll pb-2 w-96 md:w-[80vw] md:overflow-x-auto py-4 px-4"
+        className="flex space-x-1 sm:space-x-2 overflow-x-scroll pb-2 w-80 sm:w-96 md:w-[80vw] md:overflow-x-auto py-2 sm:py-4 px-2 sm:px-4"
         style={{ scrollbarWidth: "thin" }}
       >
         {hand.map((card, index) => {
@@ -111,7 +111,7 @@ const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
             </div>
           )
         })}
-        <div className={`bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs absolute top-8`}>
+        <div className={`bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs absolute top-4 sm:top-8`}>
           My cards: {count}
         </div>
       </div>

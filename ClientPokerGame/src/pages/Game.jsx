@@ -23,7 +23,6 @@ const Game = () => {
         personalGameView,
         username,
         chat,
-        messages,
         addMessage,
         setCurrentGame,
         setPersonalGameView,

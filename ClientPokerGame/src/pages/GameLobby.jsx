@@ -109,7 +109,7 @@ function GameLobby() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-lg sm:text-xl">🎮</span>
+                <span className="text-lg sm:text-xl"><img src="/poker-icon-96px.png" /></span>
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-white">Game Lobby</h1>

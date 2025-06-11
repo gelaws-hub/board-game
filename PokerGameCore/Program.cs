@@ -20,8 +20,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Register SignalR and your custom services
-// builder.Services.AddSignalR();
 builder.Services.AddSingleton<IGameRules, MinumanGameRules>();
 builder.Services.AddSingleton<PlayerConnectionManager>();
 builder.Services.AddSingleton<GameService>();
@@ -34,9 +32,6 @@ builder.Services.AddSignalR()
 
 var app = builder.Build();
 app.UseCors();
-
-// Map your API controllers (after AddControllers!)
-app.MapControllers();
 
 // Map SignalR hub
 app.MapHub<GameHub>("/gamehub");

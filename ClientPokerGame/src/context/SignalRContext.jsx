@@ -9,6 +9,7 @@ export function SignalRProvider({ children }) {
   const [isConnected, setIsConnected] = useState(false)
   const [availableGames, setAvailableGames] = useState([])
   const [messages, setMessages] = useState([])
+  const [chat, setChat] = useState([])
   const [currentGame, setCurrentGame] = useState(null)
   const [personalGameView, setPersonalGameView] = useState(null)
   const [username, setUsername] = useState(() => localStorage.getItem("poker-username") || "")
@@ -59,7 +60,7 @@ export function SignalRProvider({ children }) {
 
       connection.on("ReceiveMessage", (username, message) => {
         addMessage("ReceiveMessage", { username, message })
-        console.log("message", messages)
+        addChatMessage({ username, message })
       })
 
       connection.on("Error", (errorMessage) => {
@@ -133,6 +134,11 @@ export function SignalRProvider({ children }) {
     setMessages((prev) => [...prev, { eventType, data, timestamp }])
   }
 
+  const addChatMessage = (data) => {
+    const timestamp = new Date().toLocaleTimeString()
+    setChat((prev) => [...prev, { data, timestamp }])
+  }
+
   const updateUsername = (newUsername) => {
     setUsername(newUsername)
     localStorage.setItem("poker-username", newUsername)
@@ -146,6 +152,7 @@ export function SignalRProvider({ children }) {
         addMessage,
         availableGames,
         messages,
+        chat,
         currentGame,
         personalGameView,
         username,

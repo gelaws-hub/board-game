@@ -7,6 +7,7 @@ import GameBoard from "../components/GameBoard"
 import PlayerHand from "../components/PlayerHand"
 import OpponentHand from "../components/OpponentHand"
 import RemainingDeck from "../components/RemainingDeck"
+import TurnToast from "../components/TurnToast"
 
 const Game = () => {
     const location = useLocation();
@@ -21,6 +22,8 @@ const Game = () => {
         currentGame,
         personalGameView,
         username,
+        chat,
+        messages,
         addMessage,
         setCurrentGame,
         setPersonalGameView,
@@ -31,6 +34,7 @@ const Game = () => {
     const [chatMessage, setChatMessage] = useState("")
     const [showChat, setShowChat] = useState(false)
     const [actionInProgress, setActionInProgress] = useState(false)
+
 
     useEffect(() => {
         if (!username) {
@@ -143,8 +147,6 @@ const Game = () => {
         }
     }
 
-    console.log("Messages:", chatMessage)
-
     // Use personalGameView if available, otherwise fall back to currentGame
     const gameData = personalGameView || currentGame
 
@@ -154,7 +156,7 @@ const Game = () => {
                 <div className="text-white text-center">
                     <div className="text-4xl mb-4">🎲</div>
                     <div className="text-xl mb-2">{reconnecting ? "Reconnecting to game..." : "Loading game..."}</div>
-                    <div className="text-sm opacity-75">Game ID: {gameId}</div>
+                    <div className="text-xs opacity-75">Game ID: {gameId}</div>
                     {!isConnected && (
                         <div className="text-red-300 mt-4">
                             {reconnecting ? "Attempting to reconnect..." : "Not connected to server"}
@@ -273,33 +275,50 @@ const Game = () => {
 
     return (
         <div className="h-screen w-screen bg-green-800 overflow-hidden relative">
+            <TurnToast playerUsername={username} currentUsername={currentGame?.currentPlayer?.user?.username} />
             <div className="absolute bottom-2 left-2 text-white/70 text-xs">Game ID: {gameId}</div>
 
             {/* Chat toggle */}
             <button
                 onClick={() => setShowChat(!showChat)}
-                className="absolute top-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg z-10"
+                className="absolute top-10 right-4 bg-blue-600/80 hover:bg-blue-700/80 text-white px-4 py-2 rounded-lg z-10"
             >
                 💬 Chat
             </button>
 
             {/* Chat panel */}
             {showChat && (
-                <div className="absolute top-16 right-4 w-80 bg-white rounded-lg shadow-lg z-10">
-                    <div className="p-4 border-b">
+                <div className="absolute top-16 right-4 w-80 bg-green-100/80 rounded-lg shadow-lg z-10">
+                    <div className="p-4 border-b flex items-center">
                         <h3 className="font-bold">Game Chat</h3>
+                        <button
+                            onClick={() => setShowChat(false)}
+                            className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white px-4 py-1 h-fit rounded-lg text-sm"
+                        >
+                            Close
+                        </button>
                     </div>
-                    <div className="h-40 overflow-y-auto p-4 text-sm">{/* Chat messages would go here */}</div>
-                    <form onSubmit={sendChatMessage} className="p-4 border-t">
+                    <div className="h-[75vw] overflow-y-auto p-4 text-sm">
+                        {chat?.map((chat, index) => (
+                            <div className={`bg-green-50/70 rounded-lg p-2 mb-2 ${chat.data.username === username ? "ml-4 rounded-br-none" : "mr-4 rounded-tl-none"}`}>
+                                <div key={index} className={`text-sm`}>
+                                    <strong>{chat.data.username === username ? "You" : chat.data.username} :</strong> {chat.data.message}
+                                </div>
+                                <div className="text-xs text-gray-500 text-right">{chat.timestamp}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <form onSubmit={sendChatMessage} className="px-4 py-2 border-t flex items-center">
                         <div className="flex gap-2">
                             <input
                                 type="text"
                                 value={chatMessage}
                                 onChange={(e) => setChatMessage(e.target.value)}
                                 placeholder="Type a message..."
+                                style={{ marginBottom: 0 }}
                                 className="flex-1 px-3 py-2 border rounded-lg text-sm"
                             />
-                            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                            <button type="submit" className="bg-blue-600 text-white px-4 h-fit py-2 rounded-lg text-sm">
                                 Send
                             </button>
                         </div>
@@ -316,8 +335,8 @@ const Game = () => {
 
             {/* Opponents */}
             {opponents.map((opponent, index) => {
-                const positions = ["left", "top", "right"]
-                const position = positions[index % 3]
+                const positions = opponents.length === 1 ? ["top"] : ["left", "top", "right"]
+                const position = positions[index % positions.length]
 
                 return (
                     <div
@@ -347,17 +366,17 @@ const Game = () => {
             </div>
 
             {/* Remaining deck */}
-            <div className="absolute bottom-1/4 right-1/4 transform -translate-y-1/2">
+            <div className="absolute bottom-[7%] right-[10%] md:bottom-[15%] transform -translate-y-1/2">
                 <RemainingDeck count={remainingCards} onDrawCard={isMyTurn ? handleDrawCard : null} />
             </div>
 
             {/* End Turn button */}
             {isMyTurn && (
-                <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+                <div className={`absolute bottom-20 left-1/2 transform -translate-x-1/2`}>
                     <button
                         onClick={handleEndTurn}
                         disabled={actionInProgress}
-                        className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-6 py-2 rounded-lg transition-colors"
+                        className={`bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-6 py-2 rounded-lg transition-colors ${remainingCards > 0 ? "hidden" : ""}`}
                     >
                         {actionInProgress ? "Processing..." : "End Turn"}
                     </button>

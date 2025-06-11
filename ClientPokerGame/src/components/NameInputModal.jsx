@@ -4,7 +4,7 @@ import { useState } from "react"
 import { faker } from "@faker-js/faker"
 
 const NameInputModal = ({ isOpen, onSubmit, currentName = "" }) => {
-  const [name, setName] = useState(currentName || faker.person.fullName())
+  const [name, setName] = useState(currentName || faker.person.firstName())
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -14,7 +14,7 @@ const NameInputModal = ({ isOpen, onSubmit, currentName = "" }) => {
   }
 
   const generateRandomName = () => {
-    setName(faker.person.fullName())
+    setName(faker.person.firstName())
   }
 
   if (!isOpen) return null

@@ -1,6 +1,6 @@
 "use client"
 
-const Card = ({ suit, rank, isBackFacing = false, onClick }) => {
+const Card = ({ suit, rank, isBackFacing = false, onClick, classNameBack="" }) => {
   // Map suit numbers to symbols
   const getSuitSymbol = (suit) => {
     switch (suit) {
@@ -41,7 +41,7 @@ const Card = ({ suit, rank, isBackFacing = false, onClick }) => {
   if (isBackFacing) {
     return (
       <div
-        className="w-12 h-16 md:w-14 md:h-20 rounded-md bg-blue-800 border-2 border-white flex items-center justify-center shadow-md"
+        className={`w-12 h-16 md:w-14 md:h-20 rounded-md bg-blue-800 border-2 border-white flex items-center justify-center shadow-md ${classNameBack}`}
         style={{ backgroundImage: "repeating-linear-gradient(45deg, #1e40af, #1e40af 5px, #1e3a8a 5px, #1e3a8a 10px)" }}
       ></div>
     )

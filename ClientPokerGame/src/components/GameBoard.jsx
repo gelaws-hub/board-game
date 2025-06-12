@@ -24,8 +24,8 @@ const GameBoard = ({ boardHistory = [], currentSubRoundCards = [] }) => {
               </div>
             ))}
             {boardHistory.length > 0 && (
-              <div className="absolute -top-6 sm:-top-7 left-0 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
-                History: {boardHistory.length}
+              <div className="absolute -top-12 sm:-top-7 text-center left-0 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs z-20">
+                history: {boardHistory.length}
               </div>
             )}
           </div>

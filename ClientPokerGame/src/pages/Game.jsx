@@ -242,7 +242,7 @@ const Game = () => {
                         )}
 
                         <button
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate("/") || window.location.reload()}
                             className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
                         >
                             Back to Lobby
@@ -265,7 +265,7 @@ const Game = () => {
                         </div>
                     )}
                     <button
-                        onClick={() => navigate("/")}
+                        onClick={() => navigate("/") || window.location.reload()}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
                     >
                         Back to Lobby
@@ -281,6 +281,8 @@ const Game = () => {
     const boardHistory = personalGameView?.boardHistory || []
     const currentSubRoundCards = personalGameView?.currentSubRoundCards || []
     const remainingCards = personalGameView?.minumPile?.count || 0
+
+    console.log("Current Player : ", personalGameView?.currentPlayer.user);
 
     return (
         <div className="h-screen w-screen bg-green-800 overflow-hidden relative">
@@ -375,13 +377,13 @@ const Game = () => {
             </div>
 
             {/* Remaining deck */}
-            <div className="absolute bottom-[7%] right-[10%] md:bottom-[15%] transform -translate-y-1/2">
+            <div className="absolute bottom-[15%] right-[10%] md:bottom-[15%] md:right-[15%] transform -translate-y-1/2">
                 <RemainingDeck count={remainingCards} onDrawCard={isMyTurn ? handleDrawCard : null} />
             </div>
 
             {/* End Turn button */}
             {isMyTurn && (
-                <div className={`absolute bottom-20 left-1/2 transform -translate-x-1/2`}>
+                <div className={`absolute bottom-40 left-1/2 transform -translate-x-1/2`}>
                     <button
                         onClick={handleEndTurn}
                         disabled={actionInProgress}

@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Card from "./Card"
 
 const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
   const [selectedCard, setSelectedCard] = useState(null)
+  const cardListRef = useRef(null)
   const count = hand.length
 
   // Convert backend card format to frontend format
@@ -67,6 +68,12 @@ const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
     setSelectedCard(null)
   }
 
+  useEffect(() => {
+    if (cardListRef.current) {
+      cardListRef.current.scrollLeft = cardListRef.current.scrollWidth
+    }
+  }, [hand])
+
   return (
     <div className={`flex flex-col items-center justify-center ${toPlay ? "opacity-100" : "opacity-60"}`}>
       <div className="flex space-x-2 mb-2 sm:mb-4">
@@ -91,6 +98,7 @@ const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
         </button>
       </div>
       <div
+        ref={cardListRef}
         className="flex space-x-1 sm:space-x-2 overflow-x-scroll pb-2 w-80 sm:w-96 md:w-[80vw] md:overflow-x-auto py-2 sm:py-4 px-2 sm:px-4"
         style={{ scrollbarWidth: "thin" }}
       >
@@ -120,3 +128,4 @@ const PlayerHand = ({ hand, onCardClick, toPlay = false }) => {
 }
 
 export default PlayerHand
+

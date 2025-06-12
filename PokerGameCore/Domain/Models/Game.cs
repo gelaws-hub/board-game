@@ -38,6 +38,5 @@ namespace PokerGameCore.Domain.Models
                    ?? throw new Exception("Player not found");
         }
 
-        public IReadOnlyList<Card> GetCurrentBoard() => CurrentSubRoundCards.AsReadOnly();
     }
 }

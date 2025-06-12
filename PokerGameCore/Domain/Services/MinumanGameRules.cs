@@ -84,12 +84,12 @@ namespace PokerGameCore.Domain.Services
 
         private static void RefillMinumPile(Game game)
         {
-            if (game.BoardHistory.Count <= 1)
+            if (game.BoardHistory.Count <= 0)
                 return;
 
             // Keep the last card on board, recycle the rest into the pile
-            var refillSource = game.BoardHistory.Take(game.BoardHistory.Count - 1).ToList();
-            game.BoardHistory = game.BoardHistory.Skip(game.BoardHistory.Count - 1).ToList();
+            List<Card> refillSource = game.BoardHistory.Take(game.BoardHistory.Count).ToList();
+            game.BoardHistory = game.BoardHistory.Skip(game.BoardHistory.Count).ToList();
             game.MinumPile.AddCards(refillSource);
         }
     }

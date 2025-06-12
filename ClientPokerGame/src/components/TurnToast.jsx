@@ -3,10 +3,11 @@ import { toast, ToastContainer } from "react-toastify";
 
 export default function TurnToast({ playerUsername, currentUsername = "" }) {
     useEffect(() => {
+        console.log("Toast current username : ", currentUsername)
         if (!playerUsername || !currentUsername) return
         if (playerUsername === currentUsername) {
             toast.success("It's your turn!", {
-                position: "top-right",
+                position: "top-left",
                 autoClose: 2000,
                 hideProgressBar: false,
                 closeOnClick: true,
@@ -16,8 +17,9 @@ export default function TurnToast({ playerUsername, currentUsername = "" }) {
             })
         }
         if (playerUsername !== currentUsername) {
-            toast.success(`It's ${playerUsername}'s turn!`, {
-                position: "top-right",
+            console.log("Toast player username : ", currentUsername)
+            toast.success(`It's ${currentUsername}'s turn!`, {
+                position: "top-left",
                 autoClose: 2000,
                 hideProgressBar: false,
                 closeOnClick: true,

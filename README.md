@@ -51,7 +51,7 @@ A modern, real-time multiplayer poker-style card game built with React (frontend
 
 ## 📁 Project Structure
 
-\`\`\`
+```
 poker-game/
 ├── ClientPokerGame/                 # React Frontend
 │   ├── src/
@@ -92,7 +92,7 @@ poker-game/
     │   ├── GameHub.cs             # SignalR hub
     │   └── PlayerConnectionManager.cs # Connection tracking
     └── Program.cs                 # Application startup
-\`\`\`
+```
 
 ## 🚀 Getting Started
 

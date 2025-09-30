@@ -33,6 +33,10 @@ builder.Services.AddSignalR()
 var app = builder.Build();
 app.UseCors();
 
+app.UseStaticFiles();
+
+app.MapFallbackToFile("index.html");
+
 // Map SignalR hub
 app.MapHub<GameHub>("/gamehub");
 

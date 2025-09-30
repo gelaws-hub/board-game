@@ -16,14 +16,15 @@ export function SignalRProvider({ children }) {
   const connectionRef = useRef(null)
   const [reconnecting, setReconnecting] = useState(false)
 
-  const BASE_URL = import.meta.env.VITE_POKERCORE
+  // removed because it's now built at the same time with the backend
+  // const BASE_URL = import.meta.env.VITE_POKERCORE
 
   useEffect(() => {
     if (!username) return // Don't connect without username
 
     const connect = async () => {
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${BASE_URL}/gamehub`)
+        .withUrl(`/gamehub`)
         .withAutomaticReconnect([0, 2000, 5000, 10000, 15000, 30000]) // More aggressive reconnection strategy
         .build()
 
@@ -104,7 +105,7 @@ export function SignalRProvider({ children }) {
     return () => {
       connectionRef.current?.stop()
     }
-  }, [username, BASE_URL])
+  }, [username])
 
   const invokeHubMethod = async (methodName, ...args) => {
     if (!connectionRef.current || connectionRef.current.state !== "Connected") {

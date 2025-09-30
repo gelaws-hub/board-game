@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+# Create systemd service
+cat >/etc/systemd/system/pokergame.service <<'EOF'
+[Unit]
+Description=PokerGame ASP.NET Core app
+After=network.target
+
+[Service]
+WorkingDirectory=/usr/local/bin/pokergame
+ExecStart=/usr/local/bin/pokergame/PokerGameCore --urls "http://0.0.0.0:5000"
+Restart=always
+RestartSec=10
+SyslogIdentifier=pokergame
+User=pi
+Environment=ASPNETCORE_ENVIRONMENT=Production
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable pokergame
+systemctl start pokergame

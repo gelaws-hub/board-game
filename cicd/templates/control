@@ -1,0 +1,9 @@
+Package: pokergame
+Version: @APP_VERSION@
+Section: web
+Priority: optional
+Architecture: arm64
+Depends: libc6 (>= 2.28)
+Maintainer: Ibnu Fadhil ibnu.fadhil@formulatrix.com
+Description: Poker Game web app (ASP.NET Core + React)
+ A simple poker game web app hosted on Raspberry Pi.

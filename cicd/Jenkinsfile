@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'BASE_VERSION', defaultValue: '1.0', description: 'Base version for the package')
+    }
+
+    environment {
+        APP_VERSION = "${params.BASE_VERSION}.${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Publish dotnet application') {
+            steps {
+                sh '''
+                dotnet --list-sdks
+                dotnet publish -c Release -r linux-arm64 --self-contained true || { echo "dotnet 9 must be installed in the system" ; exit 1 }
+                '''
+            }
+        }
+
+        stage('Build Debian Package') {
+            steps {
+                sh '''
+                set -e
+
+                PKG_DIR=PokerGameCore/pokergame_deb
+                OUT_DIR=pokergame_pkg
+
+                rm -rf $OUT_DIR
+                mkdir -p $OUT_DIR
+                mkdir -p $PKG_DIR/DEBIAN
+                mkdir -p $PKG_DIR/usr/local/bin/pokergame
+
+                # Copy template DEBIAN files and published app
+                cp cicd/templates/* $PKG_DIR/DEBIAN/
+                cp PokerGameCore/bin/Release/net9.0/linux-arm64/publish/* $PKG_DIR/usr/local/bin/pokergame
+
+                # Replace version dynamically in control file
+                sed -i "s/^Version:.*/Version: ${APP_VERSION}/" $PKG_DIR/DEBIAN/control
+
+                chmod 755 $PKG_DIR/DEBIAN/postinst
+                chmod 755 $PKG_DIR/DEBIAN/postrm
+
+                # Build the deb package
+                dpkg-deb --build $PKG_DIR $OUT_DIR/pokergame_${APP_VERSION}_arm64.deb
+                '''
+            }
+        }
+
+        stage('Deploy to Raspberry Pi') {
+            steps {
+                sshagent (credentials: ['ibnu-rpi']) {
+                    sh './raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb'
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    remove|purge)
+        # Stop and disable the service
+        systemctl stop pokergame || true
+        systemctl disable pokergame || true
+
+        # Remove the service unit file
+        rm -f /etc/systemd/system/pokergame.service
+        systemctl daemon-reload
+        ;;
+esac
+
+exit 0

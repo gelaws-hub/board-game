@@ -50,7 +50,7 @@ pipeline {
         stage('Deploy to Raspberry Pi') {
             steps {
                 sshagent (credentials: ['ibnu-rpi']) {
-                    sh './raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb'
+                    sh 'cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb'
                 }
             }
         }

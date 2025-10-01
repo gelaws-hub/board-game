@@ -13,7 +13,7 @@ pipeline {
             steps {
                 sh '''
                 dotnet --list-sdks
-                dotnet publish -c Release -r linux-arm64 --self-contained true || { echo "dotnet 9 must be installed in the system" ; exit 1 }
+                dotnet publish -c Release -r linux-arm64 --self-contained true
                 '''
             }
         }

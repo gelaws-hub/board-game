@@ -54,6 +54,7 @@ pipeline {
                                 mkdir -p ~/.ssh
                                 ssh-keyscan -H 10.250.23.171 >> ~/.ssh/known_hosts
                                 scp pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb pi@10.250.23.171:/tmp/
+                                cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb
                                 '''
                 }
             }

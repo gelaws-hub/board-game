@@ -33,7 +33,7 @@ pipeline {
 
                 # Copy template DEBIAN files and published app
                 cp cicd/templates/* $PKG_DIR/DEBIAN/
-                cp PokerGameCore/bin/Release/net9.0/linux-arm64/publish/* $PKG_DIR/usr/local/bin/pokergame
+                cp -r PokerGameCore/bin/Release/net9.0/linux-arm64/publish/* $PKG_DIR/usr/local/bin/pokergame
 
                 # Replace version dynamically in control file
                 sed -i "s/^Version:.*/Version: ${APP_VERSION}/" $PKG_DIR/DEBIAN/control

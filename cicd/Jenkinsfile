@@ -9,6 +9,19 @@ pipeline {
     }
 
     stages {
+        stage('Test the application') {
+            steps {
+                sh '''
+                dotnet --version
+                dotnet restore
+                dotnet build -C Release --no-restore
+                dotnet test --logger "nunit;LogFilePath=TestResults/TestResult.xml"
+                cat PokerGameCore.Tests/TestResults/TestResult.xml
+                '''
+                nunit testResultsPattern: 'PokerGameCore.Tests/TestResults/TestResult.xml'
+            }
+        }
+
         stage('Publish dotnet application') {
             steps {
                 sh '''
@@ -50,14 +63,26 @@ pipeline {
         stage('Deploy to Raspberry Pi') {
             steps {
                 sshagent (credentials: ['ibnu-rpi']) {
-                                sh '''
-                                mkdir -p ~/.ssh
-                                ssh-keyscan -H 10.250.23.171 >> ~/.ssh/known_hosts
-                                scp pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb pi@10.250.23.171:/tmp/
-                                cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb
-                                '''
+                    sh '''
+                        mkdir -p ~/.ssh
+                        ssh-keyscan -H 10.250.23.171 >> ~/.ssh/known_hosts
+                        scp pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb pi@10.250.23.171:/tmp/
+                        cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb
+                    '''
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed'
+        }
+        success {
+            echo 'Pipeline succeeded'
+        }
+        failure {
+            echo 'Pipeline failed'
         }
     }
 }

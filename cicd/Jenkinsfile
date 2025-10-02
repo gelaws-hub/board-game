@@ -66,9 +66,9 @@ pipeline {
                 sshagent (credentials: ['ibnu-rpi']) {
                     sh '''
                         mkdir -p ~/.ssh
-                        ssh-keyscan -H ${RASPI_IP} >> ~/.ssh/known_hosts
-                        scp pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb pi@${RASPI_IP}:/tmp/
-                        cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb ${RASPI_IP}
+                        ssh-keyscan -H ${RASPI_ADDR} >> ~/.ssh/known_hosts
+                        scp pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb pi@${RASPI_ADDR}:/tmp/
+                        cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb ${RASPI_ADDR}
                     '''
                 }
             }

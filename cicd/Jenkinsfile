@@ -14,7 +14,7 @@ pipeline {
                 sh '''
                 dotnet --version
                 dotnet restore
-                dotnet build -C Release --no-restore
+                dotnet build -c Release --no-restore
                 dotnet test --logger "nunit;LogFilePath=TestResults/TestResult.xml"
                 cat PokerGameCore.Tests/TestResults/TestResult.xml
                 '''

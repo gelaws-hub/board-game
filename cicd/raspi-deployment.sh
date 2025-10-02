@@ -4,7 +4,7 @@ set -e
 # Arguments
 DEB_FILE="$1"
 RASPI_USER="pi"
-RASPI_HOST="10.250.23.171"
+RASPI_HOST="$2"
 RASPI_REPO_DIR="/var/www/html/myraspberrypi"
 RASPI_ARCH_DIR="$RASPI_REPO_DIR/dists/bookworm/main/binary-arm64"
 

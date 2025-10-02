@@ -2,6 +2,7 @@ pipeline {
     agent any
     parameters {
         string(name: 'BASE_VERSION', defaultValue: '1.0', description: 'Base version for the package')
+        string(name: 'RASPI_ADDR', defaultValue: '10.250.23.141', description: 'Raspberry Pi IP address')
     }
 
     environment {
@@ -65,9 +66,9 @@ pipeline {
                 sshagent (credentials: ['ibnu-rpi']) {
                     sh '''
                         mkdir -p ~/.ssh
-                        ssh-keyscan -H 10.250.23.171 >> ~/.ssh/known_hosts
-                        scp pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb pi@10.250.23.171:/tmp/
-                        cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb
+                        ssh-keyscan -H ${RASPI_IP} >> ~/.ssh/known_hosts
+                        scp pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb pi@${RASPI_IP}:/tmp/
+                        cicd/raspi-deployment.sh pokergame_pkg/pokergame_${APP_VERSION}_arm64.deb ${RASPI_IP}
                     '''
                 }
             }

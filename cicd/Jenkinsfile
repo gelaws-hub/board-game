@@ -61,6 +61,12 @@ pipeline {
             }
         }
 
+        stage('Archive artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'pokergame_pkg/*.deb', fingerprint: true
+            }
+        }
+
         stage('Deploy to Raspberry Pi') {
             steps {
                 sshagent (credentials: ['ibnu-rpi']) {

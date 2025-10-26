@@ -113,7 +113,9 @@ function GameLobby() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-white">Game Lobby</h1>
-                <p className="text-gray-400 text-xs sm:text-sm">{isConnected ? "🟢 Connected" : "🔴 Disconnected"}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">{isConnected ? "🟢 Connected" : "🔴 Disconnected"}
+                  {isConnected ? (<></>) : (<span className="text-gray-400 text-xs sm:text-sm">  |  Pls wait a few minutes as the backend server is booting up (coldstart) - refresh the browser if needed</span>)}
+                </p>
               </div>
             </div>
 
